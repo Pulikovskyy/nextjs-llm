@@ -7,7 +7,7 @@ interface OverlayProps {
 }
 
 const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
-  const [selectedFruit, setSelectedFruit] = useState('banana');
+  const [setselectedTextModel, setsetselectedTextModel] = useState('banana');
   const [topP, setTopP] = useState(50);
   const [topK, setTopK] = useState(50);
 
@@ -19,9 +19,8 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
         <h2 className="text-xl font-bold mb-4">Configure Image</h2>
         <label htmlFor="fruit">Fruit:</label>
         <select
-          id="fruit"
-          value={selectedFruit}
-          onChange={(e) => setSelectedFruit(e.target.value)}
+          value={setselectedTextModel}
+          onChange={(e) => setsetselectedTextModel(e.target.value)}
           className="border border-gray-300 rounded px-2 py-1 mb-4"
         >
           <option value="gemini-1.5-flash">gemini-1.5-flash</option>
@@ -60,7 +59,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
             Cancel
           </button>
           <button
-            onClick={() => onSubmit(selectedFruit, topP, topK)}
+            onClick={() => onSubmit(setselectedTextModel, topP, topK)}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
           >
             Apply

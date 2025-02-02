@@ -27,7 +27,18 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [collapsed, setCollapsed] = useState(Array(history.length).fill(true)); 
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State for the overlay
-  const [imageConfig, setImageConfig] = useState({ fruit: 'banana', brightness: 50, vividness: 50 }); //State for image config
+  const [imageConfig, setImageConfig] = useState({ llm: 'gemini-1.5', brightness: 50, vividness: 50 }); //State for image config
+
+  const [bgImage, setBgImage] = useState('/default-bg.jpg'); // Default background
+  const [fade, setFade] = useState(false); // Controls the fade-in effect
+  
+    // Background images for different models
+    const bgImages: Record<string, string> = {
+      'gemini-1.5-flash': '/bg1.jpg',
+      'gemini-1.5-pro': '/bg2.jpg',
+      'gemini-2.0-flash-exp': '/bg3.jpg',
+    };
+  
 
   const handleGenerate = async () => {
       if (!isGenerating) setIsGenerating(true)
@@ -36,7 +47,7 @@ export default function Home() {
         
       const newMessage: Message = { role: 'user', content: prompt };
       setHistory((prevHistory) => [...prevHistory, newMessage]);
-
+  
       try {
         const res = await fetch('/api/gemini', {
           method: 'POST',
@@ -68,13 +79,18 @@ export default function Home() {
     setIsCollapsed((prev) => !prev);
   };
 
-  const handleOverlaySubmit = (fruit: string, brightness: number, vividness: number) => {
-    setImageConfig({ fruit, brightness, vividness });
+  const handleOverlaySubmit = (llm: string, brightness: number, vividness: number) => { // this is a placeholder
+    setImageConfig({ llm, brightness, vividness });
     setIsOverlayOpen(false);
-    console.log("Image config updated:", imageConfig); // Log the updated config
-    console.log(fruit)
+    console.log(llm)
     console.log(brightness)
     console.log(vividness)
+    setFade(true);
+    setTimeout(() => {
+      setBgImage(bgImages[llm] || '/default-bg.jpg'); // Change background
+      setFade(false); // Fade-in effect
+    }, 500); // Adjust timing for smooth transition
+
   };
 
   const collapseAtSpecificIndex = (index:any) => { //
@@ -86,58 +102,99 @@ export default function Home() {
 
 
   return (
-    <div className="w-full border-4">
-      <div> 
-
-      <div className="flex items-center">
-        <div className="flex-grow text-center"> 
-          <h1>LLM playground</h1>
-        </div>
-        <div> 
-          <button className="ml-2" onClick={() => setIsOverlayOpen(true)}>Change agent</button> {/*Added onClick*/}
-          <button className="ml-2">Change session</button>
-        </div>
-      </div>
-
-        <textarea 
-          className="sticky border-2 mx-3 w-[98.9%] m-1/10" 
-          value={prompt} 
-          onKeyUp={handleEnterPress} 
-          onChange={(e) => setPrompt(e.target.value)} 
-          placeholder="Enter your message" 
-        />
-        <br />
-        <button onClick={handleGenerate} className="border-2 w-[98.9%] mx-3">Generate Response</button>
-        {error && <p className="text-red-500">{error}</p>}
-      </div>
-      <h2 className="justify-center border-6 border-indigo-200">
-        Conversation History{' '}
-        <button onClick={toggleLogCollapse}> {isCollapsed ? 'Show Log' : 'Hide Log'}</button>
-      </h2>
-      <br />
-
-      {!isCollapsed && (
-        <ul className="space-y-2">
-          {history.slice().reverse().map((message, index) => (
-            <li
-              key={index}
-              className={`rounded-md p-2 ${message.role === 'user' ? 'text-black-100 italic hover:ring-2 hover:ring-blue-300' : 
-                'text-gray-500 hover:ring-2 hover:ring-orange-300'}`}
-                >
-                <div style={{display: collapsed[index] ? 'none' : 'block' }}>
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
-                </div>
-              <button className="justify-items-end" onClick={() => collapseAtSpecificIndex(index)}>Show/hide</button>
-            </li>
-          ))}
-        </ul>   
-      )}
-      <Overlay
-        isOpen={isOverlayOpen}
-        onClose={() => setIsOverlayOpen(false)}
-        onSubmit={handleOverlaySubmit}
+    <div className="w-full min-h-screen relative">
+      {/* Background Image Layer (Transitions Separately) */}
+      <div
+        className={`fixed inset-0 bg-cover bg-center transition-opacity duration-500 ${
+          fade ? 'opacity-0' : 'opacity-100'
+        }`}
+        style={{ backgroundImage: `url(${bgImage})` }}
       />
+  
+      {/* Main Content Wrapper (Ensures content stays visible while background transitions) */}
+      <div className="relative z-10">
+        
+        {/* Top Navbar */}
+        <div className="flex items-center justify-between p-4">
+          {/* Left Empty Space (For Layout Balance) */}
+          <div className="w-1/3"></div>
+  
+          {/* Centered Page Title */}
+          <div className="w-1/3 text-center">
+            <h1 className="text-lg font-semibold">LLM Playground</h1>
+          </div>
+  
+          {/* Right-side Buttons */}
+          <div className="w-1/3 flex justify-end space-x-2">
+            <button className="px-4 py-2 border rounded" onClick={() => setIsOverlayOpen(true)}>
+              Change Agent
+            </button>
+            <button className="px-4 py-2 border rounded">Change Session</button>
+          </div>
+        </div>
+  
+        {/* Text Input and Generate Button */}
+        <div className="px-4">
+          <textarea
+            className="border-2 w-full p-2"
+            value={prompt}
+            onKeyUp={handleEnterPress}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Enter your message"
+          />
+          <button onClick={handleGenerate} className="border-2 w-full mt-2 py-2">
+            Generate Response
+          </button>
+          {error && <p className="text-red-500">{error}</p>}
+        </div>
+  
+        {/* Conversation History */}
+        <div className="mt-4 px-4">
+          <h2 className="border-b pb-2 font-semibold">
+            Conversation History{' '}
+            <button onClick={toggleLogCollapse}>
+              {isCollapsed ? 'Show Log' : 'Hide Log'}
+            </button>
+          </h2>
+  
+          {/* Chat History Messages */}
+          {!isCollapsed && (
+            <ul className="space-y-2 mt-2">
+              {history.slice().reverse().map((message, index) => (
+                <li
+                  key={index}
+                  className={`rounded-md p-2 ${
+                    message.role === 'user'
+                      ? 'text-black-100 italic hover:ring-2 hover:ring-blue-300'
+                      : 'text-gray-500 hover:ring-2 hover:ring-orange-300'
+                  }`}
+                >
+                  {/* Show/Hide Message Content */}
+                  <div style={{ display: collapsed[index] ? 'none' : 'block' }}>
+                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                  </div>
+                  <button
+                    className="text-sm text-blue-500 mt-1"
+                    onClick={() => collapseAtSpecificIndex(index)}
+                  >
+                    Show/Hide
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+  
+        {/* Overlay Component (Appears Above Everything Else) */}
+        <Overlay
+          isOpen={isOverlayOpen}
+          onClose={() => setIsOverlayOpen(false)}
+          onSubmit={handleOverlaySubmit}
+        />
+      </div>
     </div>
   );
+  
+  
 }
 

@@ -10,10 +10,10 @@ export async function POST(req) {
 
     // history into a single prompt string
     const prompt = history.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
-    const genAI = new GoogleGenerativeAI("AIzaSyDT8IiGPCSlkykDc7JNUjlPPmZ21IORw2k");
+    const genAI = new GoogleGenerativeAI("AIzaSyDT8IiGPCSlkykDc7JNUjlPPmZ21IORw2k"); //hard coded token lol
     const model = genAI.getGenerativeModel({
         model: "gemini-1.5-flash",
-        systemInstruction: "You are a cat. Your name is Neko.",
+        systemInstruction: "",
       });
 
     //const result = await model.generateContent(prompt);
@@ -34,6 +34,7 @@ export async function POST(req) {
           temperature: null,
           topP: null,
           topK: null,
+
         }
     });
 
