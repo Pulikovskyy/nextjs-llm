@@ -26,13 +26,15 @@ export default function Home() {
   const [isCollapsed, setIsCollapsed] = useState(false); 
   const [isGenerating, setIsGenerating] = useState(false);
   const [collapsed, setCollapsed] = useState(Array(history.length).fill(true)); 
+  
+  // For mainpage background
+  const [bgImage, setBgImage] = useState('/default-bg.jpg'); 
+  const [fade, setFade] = useState(false); 
 
   // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State for the overlay
-  const [imageConfig, setImageConfig] = useState({ llm: 'gemini-1.5', brightness: 50, vividness: 50 }); //State for image config
+  const [modelConfig, setmodelConfig] = useState({ llm: 'gemini-1.5-pro', brightness: 50, vividness: 50 }); //State for image config
 
-  const [bgImage, setBgImage] = useState('/default-bg.jpg'); // Default background
-  const [fade, setFade] = useState(false); // Controls the fade-in effect
   
     // Background images for different models
     const bgImages: Record<string, string> = {
@@ -51,16 +53,17 @@ export default function Home() {
       setHistory((prevHistory) => [...prevHistory, newMessage]);
   
       try {
+        // console.log("seinding message", JSON.stringify({ history: [...history, newMessage] }))
         const res = await fetch('/api/gemini', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ history: [...history, newMessage] }),
+          body: JSON.stringify({ history: [...history, newMessage],  llm: modelConfig.llm  }),
         });
 
         if (!res.ok) {
-          throw new Error('Network response was not ok');
+          throw new Error(`Network response was not ok ${res.status}`);
         }
 
         const data = await res.json();
@@ -81,18 +84,47 @@ export default function Home() {
     setIsCollapsed((prev) => !prev);
   };
 
-  const handleOverlaySubmit = (llm: string, brightness: number, vividness: number) => { // this is a placeholder
-    setImageConfig({ llm, brightness, vividness });
+  // const handleOverlaySubmit = async (llm: string = "gemini-1.5-pro", brightness: number, vividness: number) => {
+  //   try {
+  //     console.log("received from page.tsx", JSON.stringify(llm))
+
+  //     const res = await fetch('/api/gemini', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ llm, brightness, vividness }),
+  //     });
+  
+  //     if (!res.ok) {
+  //       throw new Error(`Network response was not ok ${res.status}`);
+  //     }
+  
+  //     const data = await res.json();
+  //     console.log("helo", data)
+  //     setmodelConfig({ llm, brightness, vividness });
+  //     setIsOverlayOpen(false);
+  //     setBgImage(data.text || '/default-bg.jpg'); // Use API response or default
+  //     setFade(true);
+  //     setTimeout(() => {
+  //       setFade(false);
+  //     }, 500);
+  //   } catch (error) {
+  //     console.error("Error submitting to API:", error);
+  //   }
+  // };
+
+  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", brightness: number, vividness: number) => { // this is a placeholder
+    setmodelConfig({ llm, brightness, vividness });
     setIsOverlayOpen(false);
     console.log(llm)
     console.log(brightness)
     console.log(vividness)
     setFade(true);
     setTimeout(() => {
-      setBgImage(bgImages[llm] || '/default-bg.jpg'); // Change background
+      setBgImage(bgImages[llm] || '/default-bg.jpg'); 
       setFade(false);
     }, 500); 
-
   };
 
   const collapseAtSpecificIndex = (index:any) => { //
