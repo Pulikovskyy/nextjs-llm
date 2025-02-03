@@ -4,10 +4,10 @@ interface OverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (fruit: string, brightness: number, vividness: number) => void;
-}
+} 
 
 const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
-  const [setselectedTextModel, setsetselectedTextModel] = useState('banana');
+  const [setselectedTextModel, setsetselectedTextModel] = useState('gemini-1.5-pro');
   const [topP, setTopP] = useState(50);
   const [topK, setTopK] = useState(50);
 
@@ -17,7 +17,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96 border-4 border-slate-500">
         <h2 className="text-xl font-bold mb-4">Configure Image</h2>
-        <label htmlFor="fruit">Fruit:</label>
+        <label htmlFor="fruit">Model:</label>
         <select
           value={setselectedTextModel}
           onChange={(e) => setsetselectedTextModel(e.target.value)}

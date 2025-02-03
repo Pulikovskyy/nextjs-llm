@@ -9,7 +9,6 @@ import  Overlay  from './components/modelcard/overlay'
  * Retrieve sessions from db and load such functionality onto button Change Session
  * Add card to support various content generation found in : https://ai.google.dev/api/generate-content
  *  - Add more models
- *  - Add background transition 
  * Add background transition based on selected model
  * 
  */
@@ -20,12 +19,15 @@ interface Message {
 }
 
 export default function Home() {
+  // Main page variables
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<Message[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false); 
   const [isGenerating, setIsGenerating] = useState(false);
   const [collapsed, setCollapsed] = useState(Array(history.length).fill(true)); 
+
+  // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State for the overlay
   const [imageConfig, setImageConfig] = useState({ llm: 'gemini-1.5', brightness: 50, vividness: 50 }); //State for image config
 
@@ -88,8 +90,8 @@ export default function Home() {
     setFade(true);
     setTimeout(() => {
       setBgImage(bgImages[llm] || '/default-bg.jpg'); // Change background
-      setFade(false); // Fade-in effect
-    }, 500); // Adjust timing for smooth transition
+      setFade(false);
+    }, 500); 
 
   };
 
@@ -121,7 +123,7 @@ export default function Home() {
   
           {/* Centered Page Title */}
           <div className="w-1/3 text-center">
-            <h1 className="text-lg font-semibold">LLM Playground</h1>
+            <h1 className="text-lg font-semibold"></h1>
           </div>
   
           {/* Right-side Buttons */}
@@ -135,13 +137,7 @@ export default function Home() {
   
         {/* Text Input and Generate Button */}
         <div className="px-4">
-          <textarea
-            className="border-2 w-full p-2"
-            value={prompt}
-            onKeyUp={handleEnterPress}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Enter your message"
-          />
+          <textarea className="border-2 w-full p-2" value={prompt} onKeyUp={handleEnterPress} onChange={(e) => setPrompt(e.target.value)}placeholder="Enter message" />
           <button onClick={handleGenerate} className="border-2 w-full mt-2 py-2">
             Generate Response
           </button>
@@ -161,8 +157,7 @@ export default function Home() {
           {!isCollapsed && (
             <ul className="space-y-2 mt-2">
               {history.slice().reverse().map((message, index) => (
-                <li
-                  key={index}
+                <li key={index}
                   className={`rounded-md p-2 ${
                     message.role === 'user'
                       ? 'text-black-100 italic hover:ring-2 hover:ring-blue-300'
@@ -173,10 +168,7 @@ export default function Home() {
                   <div style={{ display: collapsed[index] ? 'none' : 'block' }}>
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   </div>
-                  <button
-                    className="text-sm text-blue-500 mt-1"
-                    onClick={() => collapseAtSpecificIndex(index)}
-                  >
+                  <button className="text-sm mt-1" onClick={() => collapseAtSpecificIndex(index)}>
                     Show/Hide
                   </button>
                 </li>

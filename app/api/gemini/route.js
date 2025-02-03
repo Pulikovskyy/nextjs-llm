@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
+// import { selectedModel } from "../../components/modelcard"
 export async function POST(req) {
   try {
     const { history } = await req.json();
@@ -13,7 +13,7 @@ export async function POST(req) {
     const genAI = new GoogleGenerativeAI("AIzaSyDT8IiGPCSlkykDc7JNUjlPPmZ21IORw2k"); //hard coded token lol
     const model = genAI.getGenerativeModel({
         model: "gemini-1.5-flash",
-        systemInstruction: "",
+        systemInstruction: "hai",
       });
 
     //const result = await model.generateContent(prompt);
