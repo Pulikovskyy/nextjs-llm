@@ -42,7 +42,31 @@ export default function Home() {
       'gemini-2.0-flash-exp': '/bg3.jpg',
     };
   
-
+    const handleTestCloudflare = async () => {
+      try {
+          const res = await fetch('/api/cloudflare', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ prompt: 'Hello, Cloudflare AI!' }),
+          });
+  
+          if (!res.ok) {
+              throw new Error(`API request failed with status ${res.status}`);
+          }
+  
+          const data = await res.json(); 
+          console.log('Cloudflare API Response:', data);
+  
+          alert(`Response: ${data.result?.response || 'No response'}`);
+      } catch (err) {
+          console.error(err);
+          alert('Error: Check console for details.');
+      }
+  };
+  
+  
   const handleGenerate = async () => {
       if (!isGenerating) setIsGenerating(true)
 
@@ -181,6 +205,11 @@ export default function Home() {
             </ul>
           )}
         </div>
+
+        <button onClick={handleTestCloudflare} className="border-2 w-full mt-2 py-2 bg-blue-500 text-white">
+  Test Cloudflare API
+</button>
+
   
         {/* Overlay Component (Appears Above Everything Else) */}
         <Overlay
