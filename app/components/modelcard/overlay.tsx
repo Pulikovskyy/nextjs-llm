@@ -18,7 +18,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-lg p-6 w-96 border-4 border-slate-500">
         <h2 className="text-xl font-bold mb-4">Model Configuration</h2>
-        <label htmlFor="fruit">Model:</label>
+        <label>Model:</label>
         <select
           value={setselectedTextModel}
           onChange={(e) => setsetselectedTextModel(e.target.value)}
@@ -32,13 +32,13 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
 
         <div className="mb-4">
           <label>TopP:</label>
-          <input type="range" min="0" max="100" value={topP} onChange={(e) => setTopP(parseInt(e.target.value, 10))} className="w-full"/>
-          <span className="ml-2">{topP}%</span>
+          <input type="range" min="0" max="1"  step="0.01" value={topP} onChange={(e) => setTopP(parseFloat(e.target.value))} className="w-full"/>
+          <span className="ml-2">{topP}</span>
         </div>
 
         <div className="mb-4">
           <label>TopK:</label>
-          <input type="range" min="0" max="100" value={topK} onChange={(e) => setTopK(parseInt(e.target.value, 10))} className="w-full"/>
+          <input type="range" min="0" max="100"value={topK} onChange={(e) => setTopK(parseInt(e.target.value, 10))} className="w-full"/>
           <span className="ml-2">{topK}%</span>
         </div>
 
