@@ -9,7 +9,8 @@ import  Overlay  from './components/modelcard/overlay'
  * Retrieve sessions from db and load such functionality onto button Change Session
  * Add card to support various content generation found in : https://ai.google.dev/api/generate-content
  *  - Add more models
- * Add background transition based on selected model
+ *    - Add different models based on route. Use the functions as basis when dividing. 
+ * 
  * 
  */
 
@@ -32,10 +33,10 @@ export default function Home() {
   const [fade, setFade] = useState(false); 
 
   // Modal card variables
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false); // State for the overlay
-  const [modelConfig, setmodelConfig] = useState({ llm: 'gemini-1.5-flash'}); //State for image config
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
+  const [modelConfig, setmodelConfig] = useState({ llm: 'gemini-1.5-flash', topK: undefined, topP: undefined, temperature: undefined}); // These default values are already assigned to route.js :C
   
-    // Background images for different models
+    // Background images for different models. change later
     const bgImages: Record<string, string> = {
       'gemini-1.5-flash': '/bg1.jpg',
       'gemini-1.5-pro': '/bg2.jpg',
@@ -74,22 +75,31 @@ export default function Home() {
         
       const newMessage: Message = { role: 'user', content: prompt };
       setHistory((prevHistory) => [...prevHistory, newMessage]);
-  
+    
       try {
+
+        //cloudflare
+
+    const res = await fetch("/api/cloudflare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({history: [...history, newMessage] }),
+    });
+
+
+        //Gemini API
         // console.log("seinding message", JSON.stringify({ history: [...history, newMessage] }))
-        const res = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            history: [...history, newMessage],  
-            llm: modelConfig.llm,
-            topK: modelConfig.topK,
-            topP: modelConfig.topP,
-            temperature: modelConfig.temperature,
-          }),
-        });
+        // const res = await fetch('/api/gemini', {
+        //   method: 'POST',
+        //   headers: {'Content-Type': 'application/json'},
+        //   body: JSON.stringify({ 
+        //     history: [...history, newMessage],  
+        //     llm: modelConfig.llm,
+        //     topK: modelConfig.topK,
+        //     topP: modelConfig.topP,
+        //     temperature: modelConfig.temperature,
+        //   }),
+        // });
 
         if (!res.ok) {
           throw new Error(`Network response was not ok ${res.status}`);
@@ -114,7 +124,7 @@ export default function Home() {
   };
 
 
-  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", topP: number = 50, topK: number = 50, temperature: number = 1) => { 
+  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", topP: undefined, topK: undefined, temperature: undefined) => { 
     setmodelConfig({ llm, topP, topK, temperature });
     setIsOverlayOpen(false);
     setFade(true);
@@ -207,8 +217,8 @@ export default function Home() {
         </div>
 
         <button onClick={handleTestCloudflare} className="border-2 w-full mt-2 py-2 bg-blue-500 text-white">
-  Test Cloudflare API
-</button>
+          Test Cloudflare API
+      </button>
 
   
         {/* Overlay Component (Appears Above Everything Else) */}

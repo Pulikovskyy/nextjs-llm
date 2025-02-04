@@ -11,9 +11,11 @@ export async function POST(req) {
 
   try {
     const { history, llm, topK, topP, temperature } = data
-    const effectiveTopK = typeof topK === 'number' ? Math.max(1, Math.min(topK, 100)) : 50; //add constraints
-    const effectiveTopP = typeof topP === 'number' ? Math.max(0, Math.min(topP, 1)) : 0.5; //add constraints
-    const effectiveTemperature = typeof temperature === 'number' ? Math.max(0, temperature) : 1; //add constraints
+
+    // False ternary are the effective values. Leave null for defautl
+    const effectiveTopK = typeof topK === 'number' ? Math.max(1, Math.min(topK, 100)) : null; // Range 0-100
+    const effectiveTopP = typeof topP === 'number' ? Math.max(0, Math.min(topP, 1)) : null;  // Range 0-1
+    const effectiveTemperature = typeof temperature === 'number' ? Math.max(0, temperature) : null;  // Range 0-2
   
     if (!history || !Array.isArray(history)) { // Debugging purposes if history wont send
       console.log("Invalid or missing history");
@@ -25,7 +27,7 @@ export async function POST(req) {
           model: llm ? llm : "gemini-1.5-flash", // If anything happens use flash as default model
           systemInstruction: `Do not include any 'assistant: ' strings in your responses. If asked what model, you are currently ${llm} and state your parameters. These are topK, topP, and temperature respectively with the values: ${effectiveTopK}, ${effectiveTopP}, ${effectiveTemperature}`,
         });
-      console.log("llm is now", llm, "params:", topK, topP, temperature )
+      //console.log("llm is now", llm, "params:", topK, topP, temperature )
       //const result = await model.generateContent(context);
       try {
         const result = await model.generateContent({

@@ -41,7 +41,6 @@ export async function POST(req) {
         const data = await response.json(); // Convert response to JSON
         console.log("Cloudflare API Response:", data); // Log for debugging
 
-        // ✅ Fix: Return a JSON response so the frontend can parse it
         return new Response(JSON.stringify(data), {
             status: response.ok ? 200 : response.status,
             headers: { "Content-Type": "application/json" },
