@@ -56,7 +56,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
         <div className="mb-4">
           <label>TopK:</label>
           <input type="range" min="0" max="100"value={topK} onChange={(e) => setTopK(parseInt(e.target.value, 10))} className="w-full"/>
-          <span className="ml-2">{topK}%</span>
+          <span className="ml-2">{topK}</span>
         </div>
 
         <div className="mb-4">
