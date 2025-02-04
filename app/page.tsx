@@ -21,6 +21,13 @@ interface Message {
 
 export default function Home() {
   // Main page variables
+  interface ModelConfig {
+    llm: string;
+    topK: number | undefined;
+    topP: number | undefined;
+    temperature: number | undefined;
+  }
+  
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<Message[]>([]);
@@ -34,7 +41,7 @@ export default function Home() {
 
   // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
-  const [modelConfig, setmodelConfig] = useState({ llm: 'gemini-1.5-flash', topK: undefined, topP: undefined, temperature: undefined}); // These default values are already assigned to route.js :C
+  const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', topK: undefined, topP: undefined, temperature: undefined });
   
     // Background images for different models. change later
     const bgImages: Record<string, string> = {
@@ -78,28 +85,28 @@ export default function Home() {
     
       try {
 
-        //cloudflare
+        //cloudflare API
 
-    const res = await fetch("/api/cloudflare", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({history: [...history, newMessage] }),
-    });
+        // const res = await fetch("/api/cloudflare", {
+        //     method: "POST",
+        //     headers: { "Content-Type": "application/json" },
+        //     body: JSON.stringify({history: [...history, newMessage] }),
+        // });
 
 
         //Gemini API
-        // console.log("seinding message", JSON.stringify({ history: [...history, newMessage] }))
-        // const res = await fetch('/api/gemini', {
-        //   method: 'POST',
-        //   headers: {'Content-Type': 'application/json'},
-        //   body: JSON.stringify({ 
-        //     history: [...history, newMessage],  
-        //     llm: modelConfig.llm,
-        //     topK: modelConfig.topK,
-        //     topP: modelConfig.topP,
-        //     temperature: modelConfig.temperature,
-        //   }),
-        // });
+        console.log("seinding message", JSON.stringify({ history: [...history, newMessage] }))
+        const res = await fetch('/api/gemini', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ 
+            history: [...history, newMessage],  
+            llm: modelConfig.llm,
+            topK: modelConfig.topK,
+            topP: modelConfig.topP,
+            temperature: modelConfig.temperature,
+          }),
+        });
 
         if (!res.ok) {
           throw new Error(`Network response was not ok ${res.status}`);
@@ -124,8 +131,8 @@ export default function Home() {
   };
 
 
-  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", topP: undefined, topK: undefined, temperature: undefined) => { 
-    setmodelConfig({ llm, topP, topK, temperature });
+  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", topP: number | undefined, topK: number | undefined, temperature: number | undefined) => { 
+    setmodelConfig({ llm, topP: topP ?? undefined, topK: topK ?? undefined, temperature: temperature ?? undefined });
     setIsOverlayOpen(false);
     setFade(true);
     setTimeout(() => {

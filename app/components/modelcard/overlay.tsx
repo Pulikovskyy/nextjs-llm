@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 interface OverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (llm: string, topK: number, topP: number, temperature: number) => void;
+  onSubmit: (llm: string, topK: number | undefined , topP: number | undefined , temperature: number | undefined ) => void;
 } 
 
 const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
   const [setselectedTextModel, setsetselectedTextModel] = useState('gemini-1.5-flash');
-  const [topP, setTopP] = useState(50);
+  const [topP, setTopP] = useState(0.5);
   const [topK, setTopK] = useState(50);
   const [temperature, setTemperature] = useState(1);
 

@@ -23,8 +23,25 @@
 // }
 
 export async function POST(req) {
+    let data;
     try {
-        const prompt = "hello world";
+      data = await req.json();
+    } catch (jsonError) {
+      console.error("Error parsing JSON:", jsonError);
+      return new Response(JSON.stringify({ error: "Invalid JSON request body" }), { status: 400 });
+    }
+
+    try {
+        const { history, llm, topK, topP, temperature } = data
+        if (!history || !Array.isArray(history)) { // Debugging purposes if history wont send
+            console.log("Invalid or missing history");
+           }
+          else{
+            const context = history.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
+          }
+
+          
+        // const prompt = "hello world";
 
         const response = await fetch(
             "https://api.cloudflare.com/client/v4/accounts/6be8bb8c9a7803c841e08c30d1e8a9dd/ai/run/@cf/meta/llama-3.1-8b-instruct",
@@ -34,7 +51,7 @@ export async function POST(req) {
                     "Authorization": `Bearer yxeigAPSSdn4ppsKZ2OxplNqF8rXqEijj8bcZ0gL`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ prompt }),
+                body: JSON.stringify({ history }),
             }
         );
 
