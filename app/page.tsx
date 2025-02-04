@@ -21,19 +21,22 @@ interface Message {
 
 export default function Home() {
   // Main page variables
-  interface ModelConfig {
+  interface ModelConfig { // Because useState won't take both number|undefined we have to do this monstrosity.
     llm: string;
+    apiGroup: string;
     topK: number | undefined;
     topP: number | undefined;
     temperature: number | undefined;
   }
-  
+
+  // Mainpage
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<Message[]>([]);
   const [isCollapsed, setIsCollapsed] = useState(false); 
   const [isGenerating, setIsGenerating] = useState(false);
   const [collapsed, setCollapsed] = useState(Array(history.length).fill(true)); 
+  const [apiGroup, setApiGroup] = useState("Google")
   
   // For mainpage background
   const [bgImage, setBgImage] = useState('/default-bg.jpg'); 
@@ -41,7 +44,7 @@ export default function Home() {
 
   // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
-  const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', topK: undefined, topP: undefined, temperature: undefined });
+  const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', apiGroup: 'Google', topK: undefined, topP: undefined, temperature: undefined });
   
     // Background images for different models. change later
     const bgImages: Record<string, string> = {
@@ -50,79 +53,77 @@ export default function Home() {
       'gemini-2.0-flash-exp': '/bg3.jpg',
     };
   
-    const handleTestCloudflare = async () => {
-      try {
-          const res = await fetch('/api/cloudflare', {
+  const handleGenerate = async () => {
+    console.log("current api group is ", apiGroup)
+
+      if (!isGenerating) setIsGenerating(true)
+      setPrompt('')
+      const newMessage: Message = { role: 'user', content: prompt };
+      setHistory((prevHistory) => [...prevHistory, newMessage]);
+
+      if(apiGroup == "Cloudflare"){ //Cloudflare API
+        try { 
+            const res = await fetch('/api/cloudflare', {
               method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ prompt: 'Hello, Cloudflare AI!' }),
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                history: [...history, newMessage],  
+                llm: modelConfig.llm,
+                topK: modelConfig.topK,
+                topP: modelConfig.topP,
+                temperature: modelConfig.temperature,
+              }),
+            });
+            if (!res.ok) {
+              throw new Error(`Cloudflare API request failed with status ${res.status}`);
+            }
+            const data = await res.json();
+
+            const aiResponse: Message = {
+              role: 'assistant',
+              content: data.result.response,
+            };
+            setHistory((prevHistory) => [...prevHistory, aiResponse]);
+
+            if (!res.ok) {
+              throw new Error(`Network response was not ok ${res.status}`);
+            }
+          } catch (err) {
+            setError('Error generating response');
+            console.error(err);
+          }
+      }
+
+      if(apiGroup == "Google"){ // Google API
+        try {
+          //onsole.log("seinding message", JSON.stringify({ history: [...history, newMessage] }))
+          const res = await fetch('/api/gemini', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+              history: [...history, newMessage],  
+              llm: modelConfig.llm,
+              topK: modelConfig.topK,
+              topP: modelConfig.topP,
+              temperature: modelConfig.temperature,
+            }),
           });
   
           if (!res.ok) {
-              throw new Error(`API request failed with status ${res.status}`);
+            throw new Error(`Network response was not ok ${res.status}`);
           }
   
-          const data = await res.json(); 
-          console.log('Cloudflare API Response:', data);
+          const data = await res.json();
+          const aiResponse: Message = { role: 'assistant', content: data.text };
   
-          alert(`Response: ${data.result?.response || 'No response'}`);
-      } catch (err) {
+          setHistory((prevHistory) => [...prevHistory, aiResponse]);
+        } catch (err) {
+          setError('Error generating response');
           console.error(err);
-          alert('Error: Check console for details.');
-      }
-  };
-  
-  
-  const handleGenerate = async () => {
-      if (!isGenerating) setIsGenerating(true)
-
-      setPrompt('')
-        
-      const newMessage: Message = { role: 'user', content: prompt };
-      setHistory((prevHistory) => [...prevHistory, newMessage]);
-    
-      try {
-
-        //cloudflare API
-
-        // const res = await fetch("/api/cloudflare", {
-        //     method: "POST",
-        //     headers: { "Content-Type": "application/json" },
-        //     body: JSON.stringify({history: [...history, newMessage] }),
-        // });
-
-
-        //Gemini API
-        console.log("seinding message", JSON.stringify({ history: [...history, newMessage] }))
-        const res = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ 
-            history: [...history, newMessage],  
-            llm: modelConfig.llm,
-            topK: modelConfig.topK,
-            topP: modelConfig.topP,
-            temperature: modelConfig.temperature,
-          }),
-        });
-
-        if (!res.ok) {
-          throw new Error(`Network response was not ok ${res.status}`);
         }
-
-        const data = await res.json();
-        const aiResponse: Message = { role: 'assistant', content: data.text };
-
-        setHistory((prevHistory) => [...prevHistory, aiResponse]);
-      } catch (err) {
-        setError('Error generating response');
-        console.error(err);
       }
-    
   };
-  const handleEnterPress = (event:any) => { // For textarea
+  const handleEnterPress = (event:any) => { // For textarea when enter is pressed
     if (event.key === "Enter" && !event.shiftKey) handleGenerate()
   }
 
@@ -130,9 +131,11 @@ export default function Home() {
     setIsCollapsed((prev) => !prev);
   };
 
+  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", apiGroup: string = "Google", topP: number | undefined, topK: number | undefined, temperature: number | undefined) => { 
+    setApiGroup(apiGroup); 
+    setmodelConfig({ llm, apiGroup, topP: topP ?? undefined, topK: topK ?? undefined, temperature: temperature ?? undefined });
+    console.log("received params are: ", llm, apiGroup, topP, topK, temperature)
 
-  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", topP: number | undefined, topK: number | undefined, temperature: number | undefined) => { 
-    setmodelConfig({ llm, topP: topP ?? undefined, topK: topK ?? undefined, temperature: temperature ?? undefined });
     setIsOverlayOpen(false);
     setFade(true);
     setTimeout(() => {
@@ -222,11 +225,6 @@ export default function Home() {
             </ul>
           )}
         </div>
-
-        <button onClick={handleTestCloudflare} className="border-2 w-full mt-2 py-2 bg-blue-500 text-white">
-          Test Cloudflare API
-      </button>
-
   
         {/* Overlay Component (Appears Above Everything Else) */}
         <Overlay
