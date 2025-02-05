@@ -37,7 +37,8 @@ export default function Home() {
   // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
   const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', apiGroup: 'Google', topK: undefined, topP: undefined, temperature: undefined, prompt: undefined, maxTokens: undefined });
-  
+
+  const [buttonWidth, setButtonWidth] = useState('w-full');
     // Background images for different models. change later
     const bgImages: Record<string, string> = {
       'gemini-1.5-flash': '/bg1.jpg',
@@ -85,6 +86,7 @@ export default function Home() {
             }
           } catch (err) {
             setError('Error generating response');
+            setIsGenerating(false)
             console.error(err);
           }
       }
@@ -118,6 +120,7 @@ export default function Home() {
 
         } catch (err) {
           setError('Error generating response');
+          setIsGenerating(false)
           console.error(err);
         }
       }
@@ -133,7 +136,7 @@ export default function Home() {
   const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", apiGroup: string = "Google", topP: number | undefined, topK: number | undefined, temperature: number | undefined, prompt: string | undefined, maxTokens: number | undefined) => { 
     setApiGroup(apiGroup); 
     setmodelConfig({ llm, apiGroup, topP: topP ?? undefined, topK: topK ?? undefined, temperature: temperature ?? undefined, prompt: prompt ?? undefined, maxTokens: maxTokens ?? undefined });
-    console.log("received params are: ", llm, apiGroup, topP, topK, temperature)
+    console.log("received params are: ", llm, apiGroup, topP, topK, temperature, prompt, maxTokens)
 
     // For background effect. May delete later 
     setIsOverlayOpen(false);
@@ -177,30 +180,39 @@ export default function Home() {
   
           {/* Right-side Buttons */}
           <div className="w-1/3 flex justify-end space-x-2">
-            <button className="px-4 py-2 border rounded" onClick={() => setIsOverlayOpen(true)}>
-              Change Agent
+            <button className="px-4 py-2 border rounded" onClick={() => setIsOverlayOpen(true)}>Change llms
             </button>
-            <button className="px-4 py-2 border rounded">Change Session</button>
+            <button className="px-4 py-2 border rounded">Session</button>
           </div>
         </div>
   
         {/* Text Input and Generate Button */}
         <div className="px-4">
-          <textarea className="border-2 w-full p-2" value={prompt} onKeyUp={handleEnterPress} onChange={(e) => setPrompt(e.target.value)}placeholder="Enter message" />
-          <button
-          onClick={handleGenerate}
-          className={`border-2 w-full mt-2 py-2 ${
-            isGenerating ? 'bg-gray-300 cursor-not-allowed' : ''
-          }`}
-          style={{
-            borderImage: isGenerating
-              ? 'linear-gradient(to right, lime, blue) 1'
-              : 'none',
-          }}
-          disabled={isGenerating} // Disable the button while generating
-        >
-          Generate Response
-        </button>
+          <textarea
+            className="border-2 w-full p-2"
+            value={prompt}
+            onKeyUp={handleEnterPress}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Enter message"
+          />
+          <div className="flex justify-center"> {/* Add this wrapper div */}
+            <button disabled={isGenerating} onClick={handleGenerate}
+              className={`border-2 mt-2 py-2 transition-all duration-300 ease-in-out ${
+                isGenerating ? 'cursor-not-allowed opacity-70' : 'hover:bg-gray-100'
+              }`}
+              style={{
+                // Dynamic width based on isGenerating state
+                width: isGenerating ? '40%' : '100%',
+                // Dynamic border color based on apiGroup and isGenerating state
+                borderColor: isGenerating ? apiGroup === 'Google' ? 'lime' : apiGroup === 'Cloudflare' ? 'orange' : 'transparent' : 'black', // Default border color
+                // Change text color when generating
+                color: isGenerating ? 'gray' : 'black',
+              }}
+            >
+              {/* Change text based on isGenerating state */}
+              {isGenerating ? 'Generating...' : 'Generate Response'}
+            </button>
+          </div> 
           {error && <p className="text-red-500">{error}</p>}
         </div>
   

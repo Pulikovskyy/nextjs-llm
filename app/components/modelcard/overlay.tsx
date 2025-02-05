@@ -20,16 +20,14 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
   const [topP, setTopP] = useState(0.5);
   const [topK, setTopK] = useState(50);
   const [temperature, setTemperature] = useState(1);
-  const [systemPrompt, setSystemPrompt] = useState();
-  const [maxTokens, setMaxTokens] = useState();
+  const [systemPrompt, setSystemPrompt] = useState('');
+  const [maxTokens, setMaxTokens] = useState<number | undefined>(undefined);
 
 
   // State to track whether each range is enabled
   const [isTopPEnabled, setIsTopPEnabled] = useState(false);
   const [isTopKEnabled, setIsTopKEnabled] = useState(false);
   const [isTemperatureEnabled, setIsTemperatureEnabled] = useState(false);
-  const [isPromptEnabled, setIsPromptEnabled] = useState(false);
-  const [isMaxTokensEnabled, setIsMaxTokensEnabled] = useState(false);
   
 
   // Parameter ranges based on API group
@@ -69,6 +67,8 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
+
+  //could be inlined?
   const handleTopPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseFloat(e.target.value);
     updateParameterState('topP', newValue);
@@ -82,6 +82,25 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
   const handleTemperatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = parseFloat(e.target.value);
       updateParameterState('temperature', newValue);
+  };
+
+  const handleMaxTokensChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === "") {
+        setMaxTokens(undefined); // Allows clearing the field
+    } else {
+      const parsedValue = parseInt(value, 10); // Parse to integer
+
+      if (!isNaN(parsedValue)) {  // Check if parsing was successful
+        setMaxTokens(parsedValue);
+      } else {
+        // Handle the case where the input is not a valid number
+        console.error("Invalid input for maxTokens.  Please enter a number.");
+        // Optionally, you could set an error state to display a message to the user
+        // or reset the input field to a valid value.
+        setMaxTokens(undefined); // Or some default value
+      }
+    }
   };
 
 
@@ -104,8 +123,8 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
       isTopKEnabled ? topK : undefined,
       isTopPEnabled ? topP : undefined,
       isTemperatureEnabled ? temperature : undefined,
-      isPromptEnabled ? systemPrompt : undefined,
-      isMaxTokensEnabled ? maxTokens : undefined,
+      systemPrompt ? systemPrompt : undefined,
+      maxTokens ? maxTokens : undefined,
     );
   };
 
@@ -173,12 +192,12 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
           />
           <input
               type="number"
-              className="ml-2 border border-gray-300 rounded px-2 py-1 w-20"
+              className="border border-gray-300 rounded px-2 py-1 w-20"
               value={topP}
               min={parameterRanges[apiGroup].topP.min}
               max={parameterRanges[apiGroup].topP.max}
               step={parameterRanges[apiGroup].topP.step}
-              onChange={handleTopKChange}
+              onChange={handleTopPChange}
               disabled={!isTopPEnabled}
           />
         </div>
@@ -202,7 +221,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
           />
           <input
               type="number"
-              className="ml-2 border border-gray-300 rounded px-2 py-1 w-20"
+              className="border border-gray-300 rounded px-2 py-1 w-20"
               value={topK}
               min={parameterRanges[apiGroup].topK.min}
               max={parameterRanges[apiGroup].topK.max}
@@ -229,7 +248,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
           />
           <input
               type="number"
-              className="ml-2 border border-gray-300 rounded px-2 py-1 w-20"
+              className="border border-gray-300 rounded px-2 py-1 w-20"
               value={temperature}
               min={parameterRanges[apiGroup].temperature.min}
               max={parameterRanges[apiGroup].temperature.max}
@@ -238,7 +257,17 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
               disabled={!isTemperatureEnabled}
           />
         </div>
+        <p>Custom Prompt</p>
+        <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)}
+            className="border-2 w-full p-2"
+            placeholder="Enter custom prompt here"
 
+          />
+        <p>Max tokens </p>
+        <input type="number" value={maxTokens === undefined ? '' : maxTokens} onChange={handleMaxTokensChange}
+              placeholder="Max token size for all models is 8196"
+              className=" w-[100%] h-12 border border-gray-300 rounded px-2 mb-4"
+          />
         <div className="flex justify-end">
           <button onClick={onClose} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"> Cancel</button>
           <button onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"> Apply </button>

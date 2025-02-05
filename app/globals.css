@@ -19,3 +19,21 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+:root {
+  --border-color: blue; /* initial color */
+}
+
+.generating-button {
+  animation: border-color-cycle 1s linear infinite alternate; /* Use animation for cycling border color */
+}
+
+
+@keyframes border-color-cycle {
+  from {
+    border-color: blue;
+  }
+  to {
+    border-color: lime;
+  }
+}

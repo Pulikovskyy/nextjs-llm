@@ -9,7 +9,7 @@ export async function POST(req) {
     try {
         const data = await req.json();
         console.log(data)
-        const { history, llm, topK, topP, temperature } = data;
+        const { history, llm, topK, topP, temperature, prompt, maxTokens} = data;
         const context = history.map(msg => `${msg.role}: ${msg.content}`).join('\n');
         const effectiveTopK = typeof topK === 'number' ? Math.max(1, Math.min(topK, 100)) : 25; // Range 1-50
         const effectiveTopP = typeof topP === 'number' ? Math.max(0, Math.min(topP, 1)) : 1;  // Range 0-2
@@ -24,7 +24,8 @@ export async function POST(req) {
             ],
             topP: effectiveTopP,
             topK: effectiveTopK,
-            temperature: effectiveTemperature
+            temperature: effectiveTemperature,
+            max_tokens: 32496, // max_completion_tokens
         });
 
         const aiResponse = completion.choices[0].message.content;
