@@ -10,23 +10,26 @@ export async function POST(req) {
         const data = await req.json();
         console.log(data)
         const { history, llm, topK, topP, temperature, prompt, maxTokens} = data;
+        console.log(JSON.stringify(data))
         const context = history.map(msg => `${msg.role}: ${msg.content}`).join('\n');
         const effectiveTopK = typeof topK === 'number' ? Math.max(1, Math.min(topK, 100)) : 25; // Range 1-50
         const effectiveTopP = typeof topP === 'number' ? Math.max(0, Math.min(topP, 1)) : 1;  // Range 0-2
         const effectiveTemperature = typeof temperature === 'number' ? Math.max(0, temperature) : 0.6;  // Range 0-5
+        const effectivePrompt = prompt
 
 
         const completion = await openai.chat.completions.create({
             model: llm ? llm : "@hf/mistral/mistral-7b-instruct-v0.2",
             messages: [
-                { role: "system", content: `Do not include any 'assistant: ' strings in your responses. If asked what model, you are currently ${llm} and state your parameters. These are topK, topP, and temperature respectively with the values: ${effectiveTopK}, ${effectiveTopP}, ${effectiveTemperature}` },
-                { role: "user", content: context },
+                { role: "system", content: effectivePrompt }, 
+                ...history // Use history directly instead of merging into one string
             ],
-            topP: effectiveTopP,
-            topK: effectiveTopK,
+            top_p: effectiveTopP, // Use lowercase for OpenAI-like APIs
+            top_k: effectiveTopK,
             temperature: effectiveTemperature,
-            max_tokens: 32496, // max_completion_tokens
+            max_tokens: Math.min(maxTokens, 2048), // Limit tokens
         });
+        
 
         const aiResponse = completion.choices[0].message.content;
         return new Response(JSON.stringify({ result: { response: aiResponse } }), {status: 200});

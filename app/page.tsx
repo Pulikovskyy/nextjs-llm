@@ -2,12 +2,19 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import  Overlay  from './components/modelcard/overlay'
-
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+const customStyle = {
+  background: '#ffffff',
+  padding: '10px',
+  borderRadius: '5px',
+};
 
 export default function Home() {
   // Main page variables
@@ -37,8 +44,12 @@ export default function Home() {
   // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
   const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', apiGroup: 'Google', topK: undefined, topP: undefined, temperature: undefined, prompt: undefined, maxTokens: undefined });
-
-  const [buttonWidth, setButtonWidth] = useState('w-full');
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 5000); // Clear after 5 seconds
+  };
+  
     // Background images for different models. change later
     const bgImages: Record<string, string> = {
       'gemini-1.5-flash': '/bg1.jpg',
@@ -46,6 +57,42 @@ export default function Home() {
       'gemini-2.0-flash-exp': '/bg3.jpg',
     };
   
+const renderers = {
+  code({ node, inline, className, children, ...props }: any) {
+    const match = /language-(\w+)/.exec(className || '');
+    const codeString = String(children).replace(/\n$/, ''); // Ensure clean copy
+
+    const copyToClipboard = async () => {
+      try {
+        await navigator.clipboard.writeText(codeString);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    };
+
+    return !inline && match ? (
+      <div onClick={copyToClipboard} className="relative group cursor-pointer">
+        <SyntaxHighlighter 
+          style={prism} 
+          language={match[1]} 
+          PreTag="div" 
+          customStyle={customStyle}
+          {...props}
+        >
+          {codeString}
+        </SyntaxHighlighter>
+        <span className="absolute top-2 right-2 bg-gray-200 text-gray-800 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          Click to Copy
+        </span>
+      </div>
+    ) : (
+      <code className={className} style={{ background: '#f8f8f8', padding: '2px 5px', borderRadius: '3px' }} {...props}>
+        {children}
+      </code>
+    );
+  }
+};
+
   const handleGenerate = async () => {
     console.log("current api group is ", apiGroup)
 
@@ -85,10 +132,11 @@ export default function Home() {
               throw new Error(`Network response was not ok ${res.status}`);
             }
           } catch (err) {
-            setError('Error generating response');
-            setIsGenerating(false)
+            showToast('Error generating response');
+            setIsGenerating(false);
             console.error(err);
           }
+          
       }
 
       if(apiGroup == "Google"){ // Google API
@@ -119,10 +167,11 @@ export default function Home() {
           setIsGenerating(false)
 
         } catch (err) {
-          setError('Error generating response');
-          setIsGenerating(false)
+          showToast('Error generating response');
+          setIsGenerating(false);
           console.error(err);
         }
+        
       }
   };
   const handleEnterPress = (event:any) => { // For textarea when enter is pressed
@@ -213,7 +262,12 @@ export default function Home() {
               {isGenerating ? 'Generating...' : 'Generate Response'}
             </button>
           </div> 
-          {error && <p className="text-red-500">{error}</p>}
+          {toast && (
+  <div className="fixed top-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-slide-in">
+    {toast}
+  </div>
+)}
+
         </div>
   
         {/* Conversation History */}
@@ -238,7 +292,8 @@ export default function Home() {
                 >
                   {/* Show/Hide Message Content */}
                   <div style={{ display: collapsed[index] ? 'none' : 'block' }}>
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <ReactMarkdown components={renderers}>{message.content}</ReactMarkdown>
+                    
                   </div>
                   <button className="text-sm mt-1" onClick={() => collapseAtSpecificIndex(index)}>
                     Show/Hide
