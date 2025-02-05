@@ -33,7 +33,7 @@ export async function POST(req) {
       const result = await model.generateContent({
         contents: [{ role: 'user', parts: [{ text: context }] }],
         generationConfig: { 
-          maxOutputTokens: 4096, 
+          maxOutputTokens: 8196, 
           temperature: effectiveTemperature, 
           topP: effectiveTopP, 
           topK: effectiveTopK,

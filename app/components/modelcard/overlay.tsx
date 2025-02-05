@@ -1,9 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface OverlayProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (llm: string, apiGroup: string, topK: number | undefined, topP: number | undefined, temperature: number | undefined) => void;
+  onSubmit: (
+    llm: string,
+    apiGroup: string,
+    topK: number | undefined,
+    topP: number | undefined,
+    temperature: number | undefined,
+    prompt: string | undefined,
+    maxTokens: number | undefined,
+  ) => void;
 }
 
 const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
@@ -12,13 +20,71 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
   const [topP, setTopP] = useState(0.5);
   const [topK, setTopK] = useState(50);
   const [temperature, setTemperature] = useState(1);
+  const [systemPrompt, setSystemPrompt] = useState();
+  const [maxTokens, setMaxTokens] = useState();
+
 
   // State to track whether each range is enabled
-  const [isTopPEnabled, setIsTopPEnabled] = useState(true);
-  const [isTopKEnabled, setIsTopKEnabled] = useState(true);
-  const [isTemperatureEnabled, setIsTemperatureEnabled] = useState(true);
+  const [isTopPEnabled, setIsTopPEnabled] = useState(false);
+  const [isTopKEnabled, setIsTopKEnabled] = useState(false);
+  const [isTemperatureEnabled, setIsTemperatureEnabled] = useState(false);
+  const [isPromptEnabled, setIsPromptEnabled] = useState(false);
+  const [isMaxTokensEnabled, setIsMaxTokensEnabled] = useState(false);
+  
 
-  if (!isOpen) return null;
+  // Parameter ranges based on API group
+  const parameterRanges:any = {
+    Google: {
+      topK: { min: 0, max: 100, step: 1 },
+      topP: { min: 0, max: 1, step: 0.01 },
+      temperature: { min: 0, max: 2, step: 0.01 },
+    },
+    Cloudflare: {
+      topK: { min: 1, max: 50, step: 1 },
+      topP: { min: 0, max: 2, step: 0.01 },
+      temperature: { min: 0, max: 5, step: 0.01 },
+    },
+  };
+
+  // Function to update the state based on API group and parameter
+  const updateParameterState = (parameter: string, value: number) => {
+    const ranges = parameterRanges[apiGroup];
+    const { min, max } = ranges[parameter];
+
+    // Ensure value is within bounds
+    const clampedValue = Math.max(min, Math.min(max, value));
+
+    switch (parameter) {
+      case 'topP':
+        setTopP(clampedValue);
+        break;
+      case 'topK':
+        setTopK(clampedValue);
+        break;
+      case 'temperature':
+        setTemperature(clampedValue);
+        break;
+      default:
+        console.warn(`Unknown parameter: ${parameter}`);
+    }
+  };
+
+  const handleTopPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = parseFloat(e.target.value);
+    updateParameterState('topP', newValue);
+  };
+
+  const handleTopKChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = parseInt(e.target.value, 10);
+      updateParameterState('topK', newValue);
+  };
+
+  const handleTemperatureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newValue = parseFloat(e.target.value);
+      updateParameterState('temperature', newValue);
+  };
+
+
 
   const modelToApiGroup: { [key: string]: string } = {
     'gemini-1.5-flash': 'Google',
@@ -27,7 +93,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     '@cf/meta/llama-3.1-8b-instruct': 'Cloudflare',
     '@hf/thebloke/deepseek-coder-6.7b-base-awq': 'Cloudflare',
     '@hf/thebloke/deepseek-coder-6.7b-instruct-awq': 'Cloudflare',
-    '@hf/mistral/mistral-7b-instruct-v0.2': 'Cloudflare'
+    '@hf/mistral/mistral-7b-instruct-v0.2': 'Cloudflare',
   };
 
   // Function to handle the submit, passing undefined if a range is disabled
@@ -37,54 +103,84 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
       apiGroup,
       isTopKEnabled ? topK : undefined,
       isTopPEnabled ? topP : undefined,
-      isTemperatureEnabled ? temperature : undefined
+      isTemperatureEnabled ? temperature : undefined,
+      isPromptEnabled ? systemPrompt : undefined,
+      isMaxTokensEnabled ? maxTokens : undefined,
     );
   };
 
+
+
+  //Update apiGroup whenever selectedTextModel changes
+  useEffect(() => {
+    setApiGroup(modelToApiGroup[selectedTextModel] || 'Google'); // Default to Google if model not found
+  }, [selectedTextModel]);
+
+    //Update slider constraints based on ApiGroup
+  useEffect(() => {
+    const ranges = parameterRanges[apiGroup];
+    if (!ranges) return; // Somehow need this to prevent 400
+
+    //Use setters to properly update constraints of sliders
+    setTopP(Math.max(ranges.topP.min, Math.min(ranges.topP.max, topP)))
+    setTopK(Math.max(ranges.topK.min, Math.min(ranges.topK.max, topK)))
+    setTemperature(Math.max(ranges.temperature.min, Math.min(ranges.temperature.max, temperature)))
+  }, [apiGroup])
+
+  if (!isOpen) return null;
+
   return (
+    // The vignette of the modal component
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {/* Modal card */}
       <div className="bg-white rounded-lg bg-black shadow-lg p-6 w-96 border-4 border-slate-500">
         <h2 className="text-xl font-bold mb-4">Model Configuration</h2>
         <label>Model:</label>
+        {/* Select textbox */}
         <select
           value={selectedTextModel}
+          className="border border-gray-300 rounded px-2 py-2 mb-4"
           onChange={(e) => {
             const selectedValue = e.target.value;
             setSelectedTextModel(selectedValue);
-            setApiGroup(modelToApiGroup[selectedValue]);
           }}
-          className="border border-gray-300 rounded px-2 py-2 mb-4"
         >
-          <option className="bg-blue-200" value="gemini-1.5-flash">gemini-1.5-flash</option>
-          <option className="bg-blue-200" value="gemini-1.5-pro">gemini-1.5-pro</option>
-          <option className="bg-blue-200" value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
-          <option className="bg-orange-300" value="@cf/meta/llama-3.1-8b-instruct">llama-3.1-8b-instruct</option>
-          <option className="bg-orange-300" value="@hf/thebloke/deepseek-coder-6.7b-base-awq">deepseek-coder-6.b-base</option>
-          <option className="bg-orange-300" value="@hf/thebloke/deepseek-coder-6.7b-instruct-awq">deepseek-coder-6.7b-instruct</option>
-          <option className="bg-orange-300" value="@hf/mistral/mistral-7b-instruct-v0.2">mistral-7b-instruct-v0.2</option>
+        <option className="bg-blue-200" value="gemini-1.5-flash">gemini-1.5-flash</option>
+        <option className="bg-blue-200" value="gemini-1.5-pro">gemini-1.5-pro</option>
+        <option className="bg-blue-200" value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
+        <option className="bg-orange-300" value="@cf/meta/llama-3.1-8b-instruct">llama-3.1-8b-instruct</option>
+        <option className="bg-orange-300" value="@hf/thebloke/deepseek-coder-6.7b-base-awq">deepseek-coder-6.b-base</option>
+        <option className="bg-orange-300" value="@hf/thebloke/deepseek-coder-6.7b-instruct-awq">deepseek-coder-6.7b-instruct</option>
+        <option className="bg-orange-300" value="@hf/mistral/mistral-7b-instruct-v0.2">mistral-7b-instruct-v0.2</option>
         </select>
 
+        <p> Optional model parameters </p>
+        {/* All 3 sliders for TopK, TopP, and Temperature card */}
         <div className="mb-4">
           <label>
             TopP:
-            <input
-              type="checkbox"
+            <input type="checkbox" className="ml-2"
               checked={isTopPEnabled}
               onChange={(e) => setIsTopPEnabled(e.target.checked)}
-              className="ml-2"
             />
           </label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={topP}
-            onChange={(e) => setTopP(parseFloat(e.target.value))}
-            className="w-full"
+          <input type="range" className="w-full" value={topP}
+            min={parameterRanges[apiGroup].topP.min}
+            max={parameterRanges[apiGroup].topP.max}
+            step={parameterRanges[apiGroup].topP.step}
+            onChange={(e) => updateParameterState('topP', parseFloat(e.target.value))}
             disabled={!isTopPEnabled}
           />
-          <span className="ml-2">{topP}</span>
+          <input
+              type="number"
+              className="ml-2 border border-gray-300 rounded px-2 py-1 w-20"
+              value={topP}
+              min={parameterRanges[apiGroup].topP.min}
+              max={parameterRanges[apiGroup].topP.max}
+              step={parameterRanges[apiGroup].topP.step}
+              onChange={handleTopKChange}
+              disabled={!isTopPEnabled}
+          />
         </div>
 
         <div className="mb-4">
@@ -97,54 +193,59 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
               className="ml-2"
             />
           </label>
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={topK}
-            onChange={(e) => setTopK(parseInt(e.target.value, 10))}
-            className="w-full"
+          <input type="range" className="w-full" value={topK}
+            min={parameterRanges[apiGroup].topK.min}
+            max={parameterRanges[apiGroup].topK.max}
+            step={parameterRanges[apiGroup].topK.step}
+            onChange={(e) => updateParameterState('topK', parseInt(e.target.value, 10))}
             disabled={!isTopKEnabled}
           />
-          <span className="ml-2">{topK}</span>
+          <input
+              type="number"
+              className="ml-2 border border-gray-300 rounded px-2 py-1 w-20"
+              value={topK}
+              min={parameterRanges[apiGroup].topK.min}
+              max={parameterRanges[apiGroup].topK.max}
+              step={parameterRanges[apiGroup].topK.step}
+              onChange={handleTopKChange}
+              disabled={!isTopKEnabled}
+          />
         </div>
 
         <div className="mb-4">
           <label>
             Temperature:
-            <input
-              type="checkbox"
+            <input className="ml-2" type="checkbox"
               checked={isTemperatureEnabled}
               onChange={(e) => setIsTemperatureEnabled(e.target.checked)}
-              className="ml-2"
             />
           </label>
-          <input
-            type="range"
-            min="0"
-            max="2"
-            step="0.01"
-            value={temperature}
-            onChange={(e) => setTemperature(parseFloat(e.target.value))}
-            className="w-full"
+          <input type="range" className="w-full" value={temperature}
+            min={parameterRanges[apiGroup].temperature.min}
+            max={parameterRanges[apiGroup].temperature.max}
+            step={parameterRanges[apiGroup].temperature.step}
+            onChange={(e) => updateParameterState('temperature', parseFloat(e.target.value))}
             disabled={!isTemperatureEnabled}
           />
-          <span className="ml-2">{temperature}</span>
+          <input
+              type="number"
+              className="ml-2 border border-gray-300 rounded px-2 py-1 w-20"
+              value={temperature}
+              min={parameterRanges[apiGroup].temperature.min}
+              max={parameterRanges[apiGroup].temperature.max}
+              step={parameterRanges[apiGroup].temperature.step}
+              onChange={handleTemperatureChange}
+              disabled={!isTemperatureEnabled}
+          />
         </div>
 
         <div className="flex justify-end">
-          <button onClick={onClose} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2">
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            Apply
-          </button>
+          <button onClick={onClose} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"> Cancel</button>
+          <button onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"> Apply </button>
         </div>
       </div>
     </div>
   );
 };
+
 export default Overlay;

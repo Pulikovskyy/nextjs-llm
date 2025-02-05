@@ -3,16 +3,6 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import  Overlay  from './components/modelcard/overlay'
 
-/**
- * 
- * TODO: 
- * Retrieve sessions from db and load such functionality onto button Change Session
- * Add card to support various content generation found in : https://ai.google.dev/api/generate-content
- *  - Add more models
- *    - Add different models based on route. Use the functions as basis when dividing. 
- * 
- * 
- */
 
 interface Message {
   role: 'user' | 'assistant';
@@ -27,6 +17,8 @@ export default function Home() {
     topK: number | undefined;
     topP: number | undefined;
     temperature: number | undefined;
+    prompt: string | undefined;
+    maxTokens: number | undefined;
   }
 
   // Mainpage
@@ -44,7 +36,7 @@ export default function Home() {
 
   // Modal card variables
   const [isOverlayOpen, setIsOverlayOpen] = useState(false); 
-  const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', apiGroup: 'Google', topK: undefined, topP: undefined, temperature: undefined });
+  const [modelConfig, setmodelConfig] = useState<ModelConfig>({ llm: 'gemini-1.5-flash', apiGroup: 'Google', topK: undefined, topP: undefined, temperature: undefined, prompt: undefined, maxTokens: undefined });
   
     // Background images for different models. change later
     const bgImages: Record<string, string> = {
@@ -72,6 +64,8 @@ export default function Home() {
                 topK: modelConfig.topK,
                 topP: modelConfig.topP,
                 temperature: modelConfig.temperature,
+                prompt: modelConfig.prompt,
+                maxTokens: modelConfig.maxTokens
               }),
             });
             if (!res.ok) {
@@ -83,8 +77,9 @@ export default function Home() {
               role: 'assistant',
               content: data.result.response,
             };
-            setHistory((prevHistory) => [...prevHistory, aiResponse]);
 
+            setHistory((prevHistory) => [...prevHistory, aiResponse]);
+            setIsGenerating(false)
             if (!res.ok) {
               throw new Error(`Network response was not ok ${res.status}`);
             }
@@ -106,6 +101,8 @@ export default function Home() {
               topK: modelConfig.topK,
               topP: modelConfig.topP,
               temperature: modelConfig.temperature,
+              prompt: modelConfig.prompt,
+              maxTokens: modelConfig.maxTokens
             }),
           });
   
@@ -115,8 +112,10 @@ export default function Home() {
   
           const data = await res.json();
           const aiResponse: Message = { role: 'assistant', content: data.text };
-  
+
           setHistory((prevHistory) => [...prevHistory, aiResponse]);
+          setIsGenerating(false)
+
         } catch (err) {
           setError('Error generating response');
           console.error(err);
@@ -124,18 +123,19 @@ export default function Home() {
       }
   };
   const handleEnterPress = (event:any) => { // For textarea when enter is pressed
-    if (event.key === "Enter" && !event.shiftKey) handleGenerate()
+    if (event.key === "Enter" && !event.shiftKey && !isGenerating) handleGenerate()
   }
 
   const toggleLogCollapse = () => { //Allows chat history to be collapsed and otherwise
     setIsCollapsed((prev) => !prev);
   };
 
-  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", apiGroup: string = "Google", topP: number | undefined, topK: number | undefined, temperature: number | undefined) => { 
+  const handleOverlaySubmit = (llm: string = "gemini-1.5-pro", apiGroup: string = "Google", topP: number | undefined, topK: number | undefined, temperature: number | undefined, prompt: string | undefined, maxTokens: number | undefined) => { 
     setApiGroup(apiGroup); 
-    setmodelConfig({ llm, apiGroup, topP: topP ?? undefined, topK: topK ?? undefined, temperature: temperature ?? undefined });
+    setmodelConfig({ llm, apiGroup, topP: topP ?? undefined, topK: topK ?? undefined, temperature: temperature ?? undefined, prompt: prompt ?? undefined, maxTokens: maxTokens ?? undefined });
     console.log("received params are: ", llm, apiGroup, topP, topK, temperature)
 
+    // For background effect. May delete later 
     setIsOverlayOpen(false);
     setFade(true);
     setTimeout(() => {
@@ -187,9 +187,20 @@ export default function Home() {
         {/* Text Input and Generate Button */}
         <div className="px-4">
           <textarea className="border-2 w-full p-2" value={prompt} onKeyUp={handleEnterPress} onChange={(e) => setPrompt(e.target.value)}placeholder="Enter message" />
-          <button onClick={handleGenerate} className="border-2 w-full mt-2 py-2">
-            Generate Response
-          </button>
+          <button
+          onClick={handleGenerate}
+          className={`border-2 w-full mt-2 py-2 ${
+            isGenerating ? 'bg-gray-300 cursor-not-allowed' : ''
+          }`}
+          style={{
+            borderImage: isGenerating
+              ? 'linear-gradient(to right, lime, blue) 1'
+              : 'none',
+          }}
+          disabled={isGenerating} // Disable the button while generating
+        >
+          Generate Response
+        </button>
           {error && <p className="text-red-500">{error}</p>}
         </div>
   
@@ -225,13 +236,15 @@ export default function Home() {
             </ul>
           )}
         </div>
-  
+
+
         {/* Overlay Component (Appears Above Everything Else) */}
         <Overlay
           isOpen={isOverlayOpen}
           onClose={() => setIsOverlayOpen(false)}
           onSubmit={handleOverlaySubmit}
         />
+        
       </div>
     </div>
   );
