@@ -171,7 +171,6 @@ const renderers = {
           setIsGenerating(false);
           console.error(err);
         }
-        
       }
   };
   const handleEnterPress = (event:any) => { // For textarea when enter is pressed
@@ -253,7 +252,7 @@ const renderers = {
                 // Dynamic width based on isGenerating state
                 width: isGenerating ? '40%' : '100%',
                 // Dynamic border color based on apiGroup and isGenerating state
-                borderColor: isGenerating ? apiGroup === 'Google' ? 'lime' : apiGroup === 'Cloudflare' ? 'orange' : 'transparent' : 'black', // Default border color
+                borderColor: isGenerating ? apiGroup === 'Google' ? 'skyblue' : apiGroup === 'Cloudflare' ? 'orange' : 'transparent' : 'black', // Default border color
                 // Change text color when generating
                 color: isGenerating ? 'gray' : 'black',
               }}
@@ -263,9 +262,9 @@ const renderers = {
             </button>
           </div> 
           {toast && (
-  <div className="fixed top-5 right-5 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-slide-in">
-    {toast}
-  </div>
+            <div className="fixed right-10 bottom-10 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-slide-in">
+              {toast}
+          </div>
 )}
 
         </div>
