@@ -16,7 +16,7 @@ interface OverlayProps {
 }
 
 const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
-  const [selectedTextModel, setSelectedTextModel] = useState('gemini-1.5-flash');
+  const [selectedTextModel, setSelectedTextModel] = useState('gemini-2.0-flash-exp');
   const [apiGroup, setApiGroup] = useState('Google');
   const [topP, setTopP] = useState(0.5);
   const [topK, setTopK] = useState(50);
