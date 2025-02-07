@@ -52,3 +52,27 @@ body {
   transition: background 0.2s ease-in-out;
 }
 
+input::title { /* For most browsers */
+  background-color: blue;
+  font-style: italic;
+}
+
+textarea::title { /* For textareas */
+  color: blue;
+  font-style: italic;
+}
+
+label::title {
+  background-color: blue;
+  font-style: italic;
+}
+
+:-ms-input-placeholder { /* Internet Explorer 10-11 */
+  color: blue;
+  font-style: italic;
+}
+
+::-ms-input-placeholder { /* Microsoft Edge */
+  color: blue;
+  font-style: italic;
+}

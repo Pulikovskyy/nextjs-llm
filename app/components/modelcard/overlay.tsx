@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Tooltip from '../tooltip/tooltip'
 
 interface OverlayProps {
   isOpen: boolean;
@@ -152,9 +153,9 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     // The vignette of the modal component
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       {/* Modal card */}
-      <div className="bg-white rounded-lg bg-black shadow-lg p-6 w-96 border-4 border-slate-500">
+      <div className="bg-white rounded-lg bg-black shadow-lg p-6 w-[27%] border-4 border-slate-500">
         <h2 className="text-xl font-bold mb-4">Model Configuration</h2>
-        <label>Model:</label>
+        <label className="mr-4">Model:</label>
         {/* Select textbox */}
         <select
           value={selectedTextModel}
@@ -173,17 +174,18 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
         <option className="bg-orange-300" title="From Cloudflare API" value="@hf/mistral/mistral-7b-instruct-v0.2">mistral-7b-instruct-v0.2</option>
         </select>
 
-        <p> Optional model parameters </p>
+        <h3 className="text-l font-bold"> Optional model parameters </h3>
+        <p className="mb-4"> Any options left blank or disabled will initialize a model with default values. Each model may have varying min-max values. </p>
         {/* All 3 sliders for TopK, TopP, and Temperature card */}
         <div className="mb-4">
-          <label>
+         <Tooltip text="Chooses from the most probable words whose probabilities add up to P. Like topK, but uses probabilities instead of a fixed number."><label>
             TopP:
-            <input type="checkbox" className="ml-2"
+            <input type="checkbox" className="ml-2" 
               checked={isTopPEnabled}
               onChange={(e) => setIsTopPEnabled(e.target.checked)}
             />
-          </label>
-          <input type="range" className="w-full" value={topP}
+          </label></Tooltip>
+          <input type="range" className="w-full" value={topP} 
             min={parameterRanges[apiGroup].topP.min}
             max={parameterRanges[apiGroup].topP.max}
             step={parameterRanges[apiGroup].topP.step}
@@ -191,33 +193,29 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
             disabled={!isTopPEnabled}
           />
           <input
-              type="number"
+              type="number" value={topP} onChange={handleTopPChange} disabled={!isTopPEnabled}
               className="border border-gray-300 rounded px-2 py-1 w-20"
-              value={topP}
               min={parameterRanges[apiGroup].topP.min}
               max={parameterRanges[apiGroup].topP.max}
               step={parameterRanges[apiGroup].topP.step}
-              onChange={handleTopPChange}
-              disabled={!isTopPEnabled}
           />
         </div>
 
         <div className="mb-4">
-          <label>
+         <Tooltip text="Limits the model's choices to the K most likely next words. Higher values allow more creativity."><label>
             TopK:
             <input
               type="checkbox"
               checked={isTopKEnabled}
               onChange={(e) => setIsTopKEnabled(e.target.checked)}
               className="ml-2"
-            />
-          </label>
-          <input type="range" className="w-full" value={topK}
+              />
+          </label></Tooltip>
+          <input type="range" className="w-full" value={topK} disabled={!isTopKEnabled}
             min={parameterRanges[apiGroup].topK.min}
             max={parameterRanges[apiGroup].topK.max}
             step={parameterRanges[apiGroup].topK.step}
             onChange={(e) => updateParameterState('topK', parseInt(e.target.value, 10))}
-            disabled={!isTopKEnabled}
           />
           <input
               type="number"
@@ -232,39 +230,33 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
         </div>
 
         <div className="mb-4">
-          <label>
+         <Tooltip text="Sets the maximum length of the model's response"><label title="Controls the randomness of the output. Lower values make the output more predictable, higher values make it more varied." >
             Temperature:
-            <input className="ml-2" type="checkbox"
-              checked={isTemperatureEnabled}
+            <input className="ml-2" type="checkbox"  checked={isTemperatureEnabled}
               onChange={(e) => setIsTemperatureEnabled(e.target.checked)}
             />
-          </label>
-          <input type="range" className="w-full" value={temperature}
+          </label></Tooltip>
+          <input type="range" className="w-full" value={temperature} disabled={!isTemperatureEnabled}
             min={parameterRanges[apiGroup].temperature.min}
             max={parameterRanges[apiGroup].temperature.max}
             step={parameterRanges[apiGroup].temperature.step}
             onChange={(e) => updateParameterState('temperature', parseFloat(e.target.value))}
-            disabled={!isTemperatureEnabled}
           />
           <input
-              type="number"
+              type="number" value={temperature}  disabled={!isTemperatureEnabled} onChange={handleTemperatureChange}
               className="border border-gray-300 rounded px-2 py-1 w-20"
-              value={temperature}
               min={parameterRanges[apiGroup].temperature.min}
               max={parameterRanges[apiGroup].temperature.max}
               step={parameterRanges[apiGroup].temperature.step}
-              onChange={handleTemperatureChange}
-              disabled={!isTemperatureEnabled}
           />
         </div>
-        <p>Custom Prompt</p>
+        <Tooltip text="Chooses from the most probable words whose probabilities add up to P. Like topK, but uses probabilities instead of a fixed number. "><p>Custom Prompt</p></Tooltip>
         <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)}
             className="border-2 w-full p-2"
-            placeholder="Enter custom prompt here"
-
+            placeholder="Enter custom prompt like `Speak to me in GenZ slang only`"
           />
-        <p>Max tokens </p>
-        <input type="number" value={maxTokens === undefined ? '' : maxTokens} onChange={handleMaxTokensChange}
+        <Tooltip text="Sets the maximum length of the model's response"><p title="Sets the maximum length of the model's response">Max tokens </p></Tooltip>
+        <input type="number" value={maxTokens === undefined ? '' : maxTokens} onChange={handleMaxTokensChange} 
               placeholder="Max token size for all models is 8196"
               className=" w-[100%] h-12 border border-gray-300 rounded px-2 mb-4"
           />
@@ -272,8 +264,10 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
           <button onClick={onClose} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded mr-2"> Cancel</button>
           <button onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"> Apply </button>
         </div>
+
       </div>
     </div>
+    
   );
 };
 
