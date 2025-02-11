@@ -115,14 +115,15 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     '@hf/thebloke/deepseek-coder-6.7b-instruct-awq': 'Cloudflare',
     '@hf/mistral/mistral-7b-instruct-v0.2': 'Cloudflare',
   };
+  const isCloudflareModel = selectedTextModel.startsWith('@cf') || selectedTextModel.startsWith('@hf');
 
   // Function to handle the submit, passing undefined if a range is disabled
   const handleSubmit = () => {
     onSubmit(
       selectedTextModel,
       apiGroup,
-      isTopKEnabled ? topK : undefined,
-      isTopPEnabled ? topP : undefined,
+      isCloudflareModel ? undefined : isTopKEnabled ? topK : undefined, // Only send topK if not Cloudflare model
+      isCloudflareModel ? undefined : isTopPEnabled ? topP : undefined, // Only send topP if not Cloudflare model
       isTemperatureEnabled ? temperature : undefined,
       systemPrompt ? systemPrompt : undefined,
       maxTokens ? maxTokens : undefined,
@@ -177,58 +178,82 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
         <h3 className="text-l font-bold"> Optional model parameters </h3>
         <p className="mb-4"> Any options left blank or disabled will initialize a model with default values. Each model may have varying min-max values. </p>
         {/* All 3 sliders for TopK, TopP, and Temperature card */}
+        
         <div className="mb-4">
-         <Tooltip text="Chooses from the most probable words whose probabilities add up to P. Like topK, but uses probabilities instead of a fixed number."><label>
-            TopP:
-            <input type="checkbox" className="ml-2" 
-              checked={isTopPEnabled}
-              onChange={(e) => setIsTopPEnabled(e.target.checked)}
-            />
-          </label></Tooltip>
-          <input type="range" className="w-full" value={topP} 
-            min={parameterRanges[apiGroup].topP.min}
-            max={parameterRanges[apiGroup].topP.max}
-            step={parameterRanges[apiGroup].topP.step}
-            onChange={(e) => updateParameterState('topP', parseFloat(e.target.value))}
-            disabled={!isTopPEnabled}
-          />
-          <input
-              type="number" value={topP} onChange={handleTopPChange} disabled={!isTopPEnabled}
-              className="border border-gray-300 rounded px-2 py-1 w-20"
-              min={parameterRanges[apiGroup].topP.min}
-              max={parameterRanges[apiGroup].topP.max}
-              step={parameterRanges[apiGroup].topP.step}
-          />
-        </div>
-
-        <div className="mb-4">
-         <Tooltip text="Limits the model's choices to the K most likely next words. Higher values allow more creativity."><label>
-            TopK:
-            <input
-              type="checkbox"
-              checked={isTopKEnabled}
-              onChange={(e) => setIsTopKEnabled(e.target.checked)}
-              className="ml-2"
+        {!isCloudflareModel && (
+          <>
+            <div className="mb-4">
+              <Tooltip text="Chooses from the most probable words whose probabilities add up to P. Like topK, but uses probabilities instead of a fixed number.">
+                <label>
+                  TopP:
+                  <input
+                    type="checkbox"
+                    className="ml-2"
+                    checked={isTopPEnabled}
+                    onChange={(e) => setIsTopPEnabled(e.target.checked)}
+                  />
+                </label>
+              </Tooltip>
+              <input
+                type="range"
+                className="w-full"
+                value={topP}
+                min={parameterRanges[apiGroup].topP.min}
+                max={parameterRanges[apiGroup].topP.max}
+                step={parameterRanges[apiGroup].topP.step}
+                onChange={(e) => updateParameterState('topP', parseFloat(e.target.value))}
+                disabled={!isTopPEnabled}
               />
-          </label></Tooltip>
-          <input type="range" className="w-full" value={topK} disabled={!isTopKEnabled}
-            min={parameterRanges[apiGroup].topK.min}
-            max={parameterRanges[apiGroup].topK.max}
-            step={parameterRanges[apiGroup].topK.step}
-            onChange={(e) => updateParameterState('topK', parseInt(e.target.value, 10))}
-          />
-          <input
-              type="number"
-              className="border border-gray-300 rounded px-2 py-1 w-20"
-              value={topK}
-              min={parameterRanges[apiGroup].topK.min}
-              max={parameterRanges[apiGroup].topK.max}
-              step={parameterRanges[apiGroup].topK.step}
-              onChange={handleTopKChange}
-              disabled={!isTopKEnabled}
-          />
-        </div>
+              <input
+                type="number"
+                value={topP}
+                onChange={handleTopPChange}
+                disabled={!isTopPEnabled}
+                className="border border-gray-300 rounded px-2 py-1 w-20"
+                min={parameterRanges[apiGroup].topP.min}
+                max={parameterRanges[apiGroup].topP.max}
+                step={parameterRanges[apiGroup].topP.step}
+              />
+            </div>
 
+            <div className="mb-4">
+              <Tooltip text="Limits the model's choices to the K most likely next words. Higher values allow more creativity.">
+                <label>
+                  TopK:
+                  <input
+                    type="checkbox"
+                    checked={isTopKEnabled}
+                    onChange={(e) => setIsTopKEnabled(e.target.checked)}
+                    className="ml-2"
+                  />
+                </label>
+              </Tooltip>
+              <input
+                type="range"
+                className="w-full"
+                value={topK}
+                disabled={!isTopKEnabled}
+                min={parameterRanges[apiGroup].topK.min}
+                max={parameterRanges[apiGroup].topK.max}
+                step={parameterRanges[apiGroup].topK.step}
+                onChange={(e) => updateParameterState('topK', parseInt(e.target.value, 10))}
+              />
+              <input
+                type="number"
+                className="border border-gray-300 rounded px-2 py-1 w-20"
+                value={topK}
+                min={parameterRanges[apiGroup].topK.min}
+                max={parameterRanges[apiGroup].topK.max}
+                step={parameterRanges[apiGroup].topK.step}
+                onChange={handleTopKChange}
+                disabled={!isTopKEnabled}
+              />
+            </div>
+          </>
+        )}
+
+        </div>
+        
         <div className="mb-4">
          <Tooltip text="Sets the maximum length of the model's response"><label title="Controls the randomness of the output. Lower values make the output more predictable, higher values make it more varied." >
             Temperature:
