@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-export const maxDuration = 60; // This function can run for a maximum of 5 seconds
 
 const openai = new OpenAI({
   apiKey: "yxeigAPSSdn4ppsKZ2OxplNqF8rXqEijj8bcZ0gL",
@@ -9,11 +8,10 @@ const openai = new OpenAI({
 export async function POST(req) {
   try {
     const data = await req.json();
-    console.log("Received data:", data);
+    console.log("Received data:", JSON.stringify(data));
 
+    // Top_P and Top_K not supported by the cloudflare API. Probably
     const { history, llm, topK, topP, temperature, prompt, maxTokens } = data;
-
-    console.log("Received", JSON.stringify(data));
 
     const params = {
       model: llm || "@hf/mistral/mistral-7b-instruct-v0.2",
@@ -23,26 +21,42 @@ export async function POST(req) {
       ],
     };
 
-    // Conditionally add parameters
-    if (temperature !== undefined && temperature !== null) params.temperature = parseFloat(temperature)
+    // Log the parameters being sent to the API
+    console.log("Parameters being sent to OpenAI:", JSON.stringify(params, null, 2));
 
-    if (maxTokens !== undefined && maxTokens !== null) params.max_tokens = parseInt(maxTokens, 10)
+    // Conditionally add optional parameters to the request
+    if (temperature !== undefined && temperature !== null) {
+      params.temperature = parseFloat(temperature);
+    }
 
-    if (topP !== undefined && topP !== null) params.top_p = parseFloat(topP); 
-    
-    if (topK !== undefined && topK !== null) params.top_k = parseInt(topK, 10); 
+    if (maxTokens !== undefined && maxTokens !== null) {
+      params.max_tokens = parseInt(maxTokens, 10);
+    }
 
-    console.log("API parameters:", params); 
+    // Log the parameters with optional ones included
+    console.log("Final API parameters:", JSON.stringify(params, null, 2));
 
-    const completion = await openai.chat.completions.create(params);
+    // Make the API request
+    const response = await openai.chat.completions.create(params);
 
-    const aiResponse = completion.choices[0].message.content;
+    // Log the full response for debugging
+    console.log("API Response:", JSON.stringify(response, null, 2));
+
+    const aiResponse = response.choices[0].message.content;
+
     return new Response(JSON.stringify({ result: { response: aiResponse } }), { status: 200 });
 
   } catch (error) {
-    console.error("Error:", error); 
+    // Log detailed error information
+    console.error("Error:", error);
+    
+    // If the error contains response details, log them
+    if (error.response) {
+      console.error("Error response details:", JSON.stringify(error.response, null, 2));
+    }
+
     return new Response(
-      JSON.stringify({ error: "Error communicating with Cloudflare API through OpenAI chatcompletions" }),
+      JSON.stringify({ error: "Error communicating with Cloudflare API through OpenAI chatcompletions", details: error.message }),
       { status: 500 }
     );
   }
