@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+export const maxDuration = 60; 
 
 export async function POST(req) {
   // for troubleshooting if JSON being sent is the problem
