@@ -29,6 +29,25 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
   const [isTopPEnabled, setIsTopPEnabled] = useState(false);
   const [isTopKEnabled, setIsTopKEnabled] = useState(false);
   const [isTemperatureEnabled, setIsTemperatureEnabled] = useState(false);
+
+  // Controls whether the modal is mounted.
+  const [isVisible, setIsVisible] = useState(false);
+  // Controls the CSS animation state.
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+      setTimeout(() => {
+      setAnimate(true);
+      }, 10);
+    } else {
+      setAnimate(false);
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 300); 
+    }
+  }, [isOpen]);
   
 
   // Parameter ranges based on API group
@@ -88,17 +107,15 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
   const handleMaxTokensChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (value === "") {
-        setMaxTokens(undefined); // Allows clearing the field
+        setMaxTokens(undefined); 
     } else {
-      const parsedValue = parseInt(value, 10); // Parse to integer
+      const parsedValue = parseInt(value, 10); 
 
       if (!isNaN(parsedValue)) {  // Check if parsing was successful
         setMaxTokens(parsedValue);
       } else {
-        // Handle the case where the input is not a valid number
         console.error("Invalid input for maxTokens.  Please enter a number.");
-        // Optionally, you could set an error state to display a message to the user
-        // or reset the input field to a valid value.
+
         setMaxTokens(undefined); // Or some default value
       }
     }
@@ -123,14 +140,12 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
       selectedTextModel,
       apiGroup,
       isCloudflareModel ? undefined : isTopKEnabled ? topK : undefined, // Only send topK if not Cloudflare model
-      isCloudflareModel ? undefined : isTopPEnabled ? topP : undefined, // Only send topP if not Cloudflare model
-      isTemperatureEnabled ? temperature : undefined,
+      isCloudflareModel ? undefined : isTopPEnabled ? topP : undefined, 
+      isCloudflareModel ? undefined : isTemperatureEnabled ? temperature : undefined,
       systemPrompt ? systemPrompt : undefined,
       maxTokens ? maxTokens : undefined,
     );
   };
-
-
 
   //Update apiGroup whenever selectedTextModel changes
   useEffect(() => {
@@ -148,13 +163,24 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
     setTemperature(Math.max(ranges.temperature.min, Math.min(ranges.temperature.max, temperature)))
   }, [apiGroup])
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   return (
     // The vignette of the modal component
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" >
       {/* Modal card */}
-      <div className="bg-white rounded-lg bg-black shadow-lg p-6 w-[27%] border-4 border-slate-500">
+        <div
+      className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ${
+        animate ? "opacity-100" : "opacity-0"
+      }`}
+      onClick={onClose}
+    >
+      <div
+        className={`bg-white rounded-lg shadow-lg p-6 w-[27%] border-4 border-slate-500 transform transition-all duration-300 ${
+          animate ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        }`}
+        onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside
+      >
         <h2 className="text-xl font-bold mb-4">Model Configuration</h2>
         <label className="mr-4">Model:</label>
         {/* Select textbox */}
@@ -249,32 +275,33 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
                 disabled={!isTopKEnabled}
               />
             </div>
+            <div className="mb-4">
+              <Tooltip text="Sets the maximum length of the model's response"><label title="Controls the randomness of the output. Lower values make the output more predictable, higher values make it more varied." >
+                  Temperature:
+                  <input className="ml-2" type="checkbox"  checked={isTemperatureEnabled}
+                    onChange={(e) => setIsTemperatureEnabled(e.target.checked)}
+                  />
+                </label></Tooltip>
+                <input type="range" className="w-full" value={temperature} disabled={!isTemperatureEnabled}
+                  min={parameterRanges[apiGroup].temperature.min}
+                  max={parameterRanges[apiGroup].temperature.max}
+                  step={parameterRanges[apiGroup].temperature.step}
+                  onChange={(e) => updateParameterState('temperature', parseFloat(e.target.value))}
+                />
+                <input
+                    type="number" value={temperature}  disabled={!isTemperatureEnabled} onChange={handleTemperatureChange}
+                    className="border border-gray-300 rounded px-2 py-1 w-20"
+                    min={parameterRanges[apiGroup].temperature.min}
+                    max={parameterRanges[apiGroup].temperature.max}
+                    step={parameterRanges[apiGroup].temperature.step}
+                />
+             </div>
           </>
         )}
 
         </div>
         
-        <div className="mb-4">
-         <Tooltip text="Sets the maximum length of the model's response"><label title="Controls the randomness of the output. Lower values make the output more predictable, higher values make it more varied." >
-            Temperature:
-            <input className="ml-2" type="checkbox"  checked={isTemperatureEnabled}
-              onChange={(e) => setIsTemperatureEnabled(e.target.checked)}
-            />
-          </label></Tooltip>
-          <input type="range" className="w-full" value={temperature} disabled={!isTemperatureEnabled}
-            min={parameterRanges[apiGroup].temperature.min}
-            max={parameterRanges[apiGroup].temperature.max}
-            step={parameterRanges[apiGroup].temperature.step}
-            onChange={(e) => updateParameterState('temperature', parseFloat(e.target.value))}
-          />
-          <input
-              type="number" value={temperature}  disabled={!isTemperatureEnabled} onChange={handleTemperatureChange}
-              className="border border-gray-300 rounded px-2 py-1 w-20"
-              min={parameterRanges[apiGroup].temperature.min}
-              max={parameterRanges[apiGroup].temperature.max}
-              step={parameterRanges[apiGroup].temperature.step}
-          />
-        </div>
+       
         <Tooltip text="Chooses from the most probable words whose probabilities add up to P. Like topK, but uses probabilities instead of a fixed number. "><p>Custom Prompt</p></Tooltip>
         <textarea value={systemPrompt} onChange={(e) => setSystemPrompt(e.target.value)}
             className="border-2 w-full p-2"
@@ -290,6 +317,7 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
           <button onClick={handleSubmit} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"> Apply </button>
         </div>
 
+      </div>
       </div>
     </div>
     
