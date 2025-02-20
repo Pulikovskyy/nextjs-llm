@@ -16,7 +16,7 @@ interface OverlayProps {
 }
 
 const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
-  const [selectedTextModel, setSelectedTextModel] = useState('gemini-2.0-flash-exp');
+  const [selectedTextModel, setSelectedTextModel] = useState('gemini-2.0-flash');
   const [apiGroup, setApiGroup] = useState('Google');
   const [topP, setTopP] = useState(0.5);
   const [topK, setTopK] = useState(50);
@@ -192,9 +192,9 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit }) => {
             setSelectedTextModel(selectedValue);
           }}
         >
-        <option className="bg-blue-200" title="From Google API" value="gemini-1.5-flash">gemini-1.5-flash</option>
-        <option className="bg-blue-200" title="From Google API" value="gemini-1.5-pro">gemini-1.5-pro</option>
-        <option className="bg-blue-200" title="From Google API" value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
+        <option className="bg-blue-200" title="From Google API" value="gemini-2.0-pro-exp-02-05">gemini-2.0-pro-exp-02-05</option>
+        <option className="bg-blue-200" title="From Google API" value="gemini-2.0-flash-thinking-exp-01-21">gemini-2.0-flash-thinking-exp-01-21</option>
+        <option className="bg-blue-200" title="From Google API" value="gemini-2.0-flash">gemini-2.0-flash</option>
         <option className="bg-orange-300" title="From Cloudflare API" value="@cf/meta/llama-3.1-8b-instruct">llama-3.1-8b-instruct</option>
         <option className="bg-orange-300" title="From Cloudflare API" value="@hf/thebloke/deepseek-coder-6.7b-base-awq">deepseek-coder-6.b-base</option>
         <option className="bg-orange-300" title="From Cloudflare API" value="@hf/thebloke/deepseek-coder-6.7b-instruct-awq">deepseek-coder-6.7b-instruct</option>
