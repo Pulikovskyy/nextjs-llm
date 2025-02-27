@@ -2,15 +2,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 export const maxDuration = 60; 
 
 export async function POST(req) {
-  // for troubleshooting if JSON being sent is the problem
-  // let data;
-  // try {
-  //   data = await req.json();
-  // } catch (jsonError) {
-  //   console.error("Error parsing JSON:", jsonError);
-  //   return new Response(JSON.stringify({ error: "Invalid JSON request body" }), { status: 400 });
-  // }
-
   try {
     const { history, llm, topK, topP, temperature, prompt, maxTokens} = await req.json();
     const context = history.map((msg) => `${msg.role}: ${msg.content}`).join('\n');
@@ -19,7 +10,8 @@ export async function POST(req) {
     const effectiveTopK = typeof topK === 'number' ? Math.max(1, Math.min(topK, 100)) : null; // Range 0-100
     const effectiveTopP = typeof topP === 'number' ? Math.max(0, Math.min(topP, 1)) : null;  // Range 0-1
     const effectiveTemperature = typeof temperature === 'number' ? Math.max(0, temperature) : null;  // Range 0-2
-    const effectivePrompt = prompt ? prompt : `Do not include any 'assistant: ' strings in your responses. If asked what model, you are currently ${llm} and state your parameters. These are topK, topP, and temperature respectively with the values: ${effectiveTopK}, ${effectiveTopP}, ${effectiveTemperature}`
+    const effectivePrompt = prompt ? prompt : `Do not include any 'assistant: ' strings in your responses. If you are asked what model you are, you are ${llm}`
+    // const effectivePrompt = prompt ? prompt : `Do not include any 'assistant: ' strings in your responses. If asked what model, you are currently ${llm} and state your parameters. These are topK, topP, and temperature respectively with the values: ${effectiveTopK}, ${effectiveTopP}, ${effectiveTemperature}`
 
 
     if (!history || !Array.isArray(history)) { // Debugging purposes if history wont send. 

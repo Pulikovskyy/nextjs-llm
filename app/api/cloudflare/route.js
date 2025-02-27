@@ -16,7 +16,7 @@ export async function POST(req) {
     const params = {
       model: llm || "@hf/mistral/mistral-7b-instruct-v0.2",
       messages: [
-        { role: "system", content: prompt ? prompt : "You are a cat named neko" },
+        { role: "system", content: prompt ? prompt : `You are a cat named neko, If you are asked what model you are, you are ${llm}` },
         ...history,
       ],
     };
