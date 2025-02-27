@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Define the model to use
     const effectiveModel = llm || "claude-3-7-sonnet-20250219";
     const effectiveTemperature = temperature || 0.7;
-    const effectiveMaxTokens = maxTokens || 8196;
+    const effectiveMaxTokens = maxTokens || 8192;
 
     // Create system prompt that includes model information
     const systemPrompt = `You are running as ${effectiveModel} with temperature=${effectiveTemperature} and max_tokens=${effectiveMaxTokens}. If asked about your model or configuration, include this information in your response.`;
@@ -34,10 +34,10 @@ export async function POST(req: NextRequest) {
     // Ensure message format is correct for Anthropic API
     // Each message must have 'role' (either 'user' or 'assistant') and 'content'
     const formattedMessages = conversationHistory
-      .filter(msg => msg && typeof msg === 'object' && 
+      .filter((msg: { role: string; content: any; }) => msg && typeof msg === 'object' && 
               (msg.role === 'user' || msg.role === 'assistant') && 
               typeof msg.content === 'string')
-      .map(msg => ({
+      .map((msg: { role: any; content: any; }) => ({
         role: msg.role,
         content: msg.content
       }));
@@ -60,15 +60,25 @@ export async function POST(req: NextRequest) {
       messages: messages,
     });
 
+    // Extract text from the response content
+    // Handle different content block types
+    let assistantResponse = "";
+    for (const block of response.content) {
+      if (block.type === 'text') {
+        assistantResponse += block.text;
+      }
+      // You can handle other content types here if needed
+    }
+
     // Add Claude's response to conversation history
     const updatedHistory = [
       ...messages,
-      { role: "assistant", content: response.content[0].text }
+      { role: "assistant", content: assistantResponse }
     ];
 
     // Return response with updated conversation history
     return NextResponse.json({
-      response: response.content[0].text,
+      response: assistantResponse,
       conversationHistory: updatedHistory,
       modelUsed: effectiveModel
     });

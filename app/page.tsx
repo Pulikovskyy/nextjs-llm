@@ -96,10 +96,24 @@ export default function Home() {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
   
-  // Scroll to bottom of history when new messages are added
+  // Replace the current useEffect for scrolling with this more sophisticated version
   useEffect(() => {
     if (historyContainerRef.current) {
-      historyContainerRef.current.scrollTop = historyContainerRef.current.scrollHeight;
+      const container = historyContainerRef.current;
+      
+      // Only auto-scroll if the user was already near the bottom
+      // (within 100px of the bottom)
+      const isNearBottom = 
+        container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+      if (isNearBottom) {
+        // Scroll to bottom with a slight delay to ensure content is rendered
+        setTimeout(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }, 100);
+      }
     }
   }, [history, isCollapsed]);
 
@@ -409,177 +423,176 @@ const renderers = useMemo(
 
       {/* Main Content Wrapper (Ensures content stays visible while background transitions) */}
       <div className="relative z-10 flex flex-col h-screen">
-        {/* Top Navbar */}
-        <div className={`flex items-center justify-between p-4 ${darkMode ? 'text-white' : 'text-black'}`}>
-          {/* Left side with Dark Mode Toggle */}
-          <div className="w-1/3 flex items-center">
-            <button 
-              onClick={toggleDarkMode} 
-              className={`px-4 py-2 border rounded flex items-center space-x-2 ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}
-            >
-              {darkMode ? (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <span>Light Mode</span>
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                  <span>Dark Mode</span>
-                </>
-              )}
-            </button>
-          </div>
+  {/* Top Navbar */}
+  <div className={`flex items-center justify-between p-4 ${darkMode ? 'text-white' : 'text-black'}`}>
+    {/* Left side with Dark Mode Toggle */}
+    <div className="w-1/3 flex items-center">
+      <button 
+        onClick={toggleDarkMode} 
+        className={`px-4 py-2 border rounded flex items-center space-x-2 ${darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}
+      >
+        {darkMode ? (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <span>Light Mode</span>
+          </>
+        ) : (
+          <>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <span>Dark Mode</span>
+          </>
+        )}
+      </button>
+    </div>
 
-          {/* Centered Page Title */}
-          <div className="w-1/3 text-center">
-            <h1 className="text-lg font-semibold"></h1>
-          </div>
+    {/* Centered Page Title */}
+    <div className="w-1/3 text-center">
+      <h1 className="text-lg font-semibold"></h1>
+    </div>
 
-          {/* Right-side Buttons */}
-          <div className="w-1/3 flex justify-end space-x-2">
-            <button 
-              className={`px-4 py-2 border rounded ${darkMode ? 'bg-gray-800 border-gray-600 hover:bg-gray-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`} 
-              onClick={() => setIsOverlayOpen(true)}
-            >
-              Change Models
-            </button>
-            <button 
-              className={`px-4 py-2 border rounded ${darkMode ? 'bg-red-900 border-red-800 hover:bg-red-800' : 'bg-red-100 border-red-300 hover:bg-red-200 text-red-700'}`} 
-              onClick={clearHistory}
-            >
-              Delete History
-            </button>
-          </div>
-        </div>
+    {/* Right-side Buttons */}
+    <div className="w-1/3 flex justify-end space-x-2">
+      <button 
+        className={`px-4 py-2 border rounded ${darkMode ? 'bg-gray-800 border-gray-600 hover:bg-gray-700' : 'bg-white border-gray-300 hover:bg-gray-100'}`} 
+        onClick={() => setIsOverlayOpen(true)}
+      >
+        Change Models
+      </button>
+      <button 
+        className={`px-4 py-2 border rounded ${darkMode ? 'bg-red-900 border-red-800 hover:bg-red-800' : 'bg-red-100 border-red-300 hover:bg-red-200 text-red-700'}`} 
+        onClick={clearHistory}
+      >
+        Delete History
+      </button>
+    </div>
+  </div>
 
-        {/* Conversation History - with fixed height and scrolling */}
-        <div 
-          ref={historyContainerRef}
-          className={`flex-grow px-4 mt-4 overflow-y-auto ${darkMode ? 'text-white' : 'text-black'}`}
-          style={{ maxHeight: 'calc(100vh - 220px)' }}
-        >
-          <h2 className={`border-b pb-2 font-semibold sticky top-0 ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-white'} z-10`}>
-            Conversation History{' '}
-            <button 
-              onClick={toggleLogCollapse}
-              className={`ml-2 px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'}`}
-            >
-              {isCollapsed ? 'Show Log' : 'Hide Log'}
-            </button>
-          </h2>
-          <div className="px-4 py-3 border-t mt-auto">
-          <textarea
-            ref={textareaRef}
-            className={`border-2 w-full p-2 resize-none transition-all duration-300 ${
-              errorBorder ? 'border-red-500' : darkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-black'
-            }`}
-            value={prompt}
-            onKeyUp={handleEnterPress}
-            onChange={handleTextareaChange}
-            placeholder="Enter message"
-            style={{ 
-              minHeight: '60px',
-              height: textareaHeight,
-              maxHeight: '20vh',
-            }}
-          />
-          <div className="flex justify-center">
-            <button
-              disabled={isGenerating || !prompt.trim()}
-              onClick={handleGenerate}
-              className={`border-2 mt-2 py-2 transition-all duration-300 ease-in-out ${
-                isGenerating || !prompt.trim() ? 'cursor-not-allowed opacity-70' : darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
-              }`}
-              style={{
-                // Dynamic width based on isGenerating state
-                width: isGenerating ? '40%' : '100%',
-                // Dynamic border color based on apiGroup and isGenerating state
-                borderColor: isGenerating
-                  ? apiGroup === 'Google' 
-                    ? 'skyblue' 
-                    : apiGroup === 'Cloudflare' 
-                      ? 'orange' 
-                      : apiGroup === 'Anthropic'
-                        ? '#8a2be2'  // Purple for Anthropic
-                        : apiGroup === 'OpenAI'
-                          ? '#10a37f'  // Green for OpenAI
-                          : 'transparent'
-                  : darkMode ? 'gray' : 'black', // Default border color
-                // Dynamic background color hint for each provider
-                backgroundColor: isGenerating
-                  ? apiGroup === 'Anthropic'
-                    ? 'rgba(138, 43, 226, 0.1)'  // Very light purple for Anthropic
+    {/* Text Input Area - Move this up */}
+    <div className="px-4 py-3 border-b">
+      <textarea
+        ref={textareaRef}
+        className={`border-2 w-full p-2 resize-none transition-all duration-300 ${
+          errorBorder ? 'border-red-500' : darkMode ? 'border-gray-600 bg-gray-800 text-white' : 'border-gray-300 bg-white text-black'
+        }`}
+        value={prompt}
+        onKeyUp={handleEnterPress}
+        onChange={handleTextareaChange}
+        placeholder="Enter message"
+        style={{ 
+          minHeight: '60px',
+          height: textareaHeight,
+          maxHeight: '20vh',
+        }}
+      />
+      <div className="flex justify-center">
+        <button
+          disabled={isGenerating || !prompt.trim()}
+          onClick={handleGenerate}
+          className={`border-2 mt-2 py-2 transition-all duration-300 ease-in-out ${
+            isGenerating || !prompt.trim() ? 'cursor-not-allowed opacity-70' : darkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'
+          }`}
+          style={{
+            // Dynamic width based on isGenerating state
+            width: isGenerating ? '40%' : '100%',
+            // Dynamic border color based on apiGroup and isGenerating state
+            borderColor: isGenerating
+              ? apiGroup === 'Google' 
+                ? 'skyblue' 
+                : apiGroup === 'Cloudflare' 
+                  ? 'orange' 
+                  : apiGroup === 'Anthropic'
+                    ? '#8a2be2'  // Purple for Anthropic
                     : apiGroup === 'OpenAI'
-                      ? 'rgba(16, 163, 127, 0.1)'  // Very light green for OpenAI
-                      : ''
-                  : darkMode ? 'rgba(0, 0, 0, 0.3)' : '',
-                // Change text color when generating
-                color: darkMode ? 'white' : isGenerating ? 'gray' : 'black',
-              }}
-            >
-              {/* Custom text based on api provider */}
-              {isGenerating 
-                ? apiGroup === 'Anthropic'
-                  ? 'Claude is thinking...'
-                  : apiGroup === 'OpenAI'
-                    ? 'GPT is generating...'
-                    : 'Generating...'
-                : 'Generate Response'}
-            </button>
-          </div>
-          {toast && (
-            <div className="fixed right-10 bottom-10 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-slide-in">
-              {toast}
-            </div>
-          )}
+                      ? '#10a37f'  // Green for OpenAI
+                      : 'transparent'
+              : darkMode ? 'gray' : 'black', // Default border color
+            // Dynamic background color hint for each provider
+            backgroundColor: isGenerating
+              ? apiGroup === 'Anthropic'
+                ? 'rgba(138, 43, 226, 0.1)'  // Very light purple for Anthropic
+                : apiGroup === 'OpenAI'
+                  ? 'rgba(16, 163, 127, 0.1)'  // Very light green for OpenAI
+                  : ''
+              : darkMode ? 'rgba(0, 0, 0, 0.3)' : '',
+            // Change text color when generating
+            color: darkMode ? 'white' : isGenerating ? 'gray' : 'black',
+          }}
+        >
+          {/* Custom text based on api provider */}
+          {isGenerating 
+            ? apiGroup === 'Anthropic'
+              ? 'Claude is thinking...'
+              : apiGroup === 'OpenAI'
+                ? 'GPT is generating...'
+                : 'Generating...'
+            : 'Generate Response'}
+        </button>
+      </div>
+      {toast && (
+        <div className="fixed right-10 bottom-10 bg-red-500 text-white px-4 py-2 rounded shadow-lg z-50 animate-slide-in">
+          {toast}
         </div>
-          {/* Chat History Messages */}
-          {!isCollapsed && (
-            <ul className="space-y-2 mt-2 pb-4">
-              {memoizedMessages.slice().reverse().map((message, index) => (
-                <li 
-                  key={index} 
-                  className={`rounded-md p-2 ${
-                    message.role === 'user' 
-                      ? darkMode ? 'bg-gray-800 bg-opacity-60' : 'bg-blue-50' 
-                      : darkMode ? 'bg-gray-700 bg-opacity-60' : 'bg-gray-50'
+      )}
+    </div>
+
+    {/* Conversation History - with fixed height and scrolling */}
+    <div 
+      ref={historyContainerRef}
+      className={`flex-grow px-4 mt-4 overflow-y-auto ${darkMode ? 'text-white' : 'text-black'}`}
+    >
+      <h2 className={`border-b pb-2 font-semibold sticky top-0 ${darkMode ? 'border-gray-700 bg-gray-900' : 'border-gray-300 bg-white'} z-10`}>
+        Conversation History{' '}
+        <button 
+          onClick={toggleLogCollapse}
+          className={`ml-2 px-2 py-1 text-sm rounded ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-200 hover:bg-gray-300'}`}
+        >
+          {isCollapsed ? 'Show Log' : 'Hide Log'}
+        </button>
+      </h2>
+      
+      {/* Chat History Messages */}
+      {!isCollapsed && (
+        <ul className="space-y-2 mt-2 pb-4">
+          {memoizedMessages.slice().reverse().map((message, index) => (
+            <li 
+              key={index} 
+              className={`rounded-md p-2 ${
+                message.role === 'user' 
+                  ? darkMode ? 'bg-gray-800 bg-opacity-60' : 'bg-blue-50' 
+                  : darkMode ? 'bg-gray-700 bg-opacity-60' : 'bg-gray-50'
+              }`}
+            >
+              <div className="flex justify-end mb-1">
+                <button 
+                  onClick={() => collapseAtSpecificIndex(index)}
+                  className={`text-xs px-2 py-1 rounded ${
+                    darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
                   }`}
                 >
-                  <div className="flex justify-end mb-1">
-                    <button 
-                      onClick={() => collapseAtSpecificIndex(index)}
-                      className={`text-xs px-2 py-1 rounded ${
-                        darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-200 hover:bg-gray-300'
-                      }`}
-                    >
-                      {collapsed[index] ? 'Show' : 'Hide'}
-                    </button>
-                  </div>
-                  <div style={{ display: collapsed[index] ? 'none' : 'block' }}>
-                    {message.markdown}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                  {collapsed[index] ? 'Show' : 'Hide'}
+                </button>
+              </div>
+              <div style={{ display: collapsed[index] ? 'none' : 'block' }}>
+                {message.markdown}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
 
-        
-
-
-        {/* Overlay Component (Appears Above Everything Else) */}
-        <Overlay 
-          isOpen={isOverlayOpen} 
-          onClose={() => setIsOverlayOpen(false)} 
-          onSubmit={handleOverlaySubmit} 
-          darkMode={darkMode}
-        />
-      </div>
+    {/* Overlay Component (Appears Above Everything Else) */}
+    <Overlay 
+      isOpen={isOverlayOpen} 
+      onClose={() => setIsOverlayOpen(false)} 
+      onSubmit={handleOverlaySubmit} 
+      darkMode={darkMode}
+    />
+  </div>
     </div>
   );
 }
