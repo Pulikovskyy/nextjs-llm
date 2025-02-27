@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     // Define the model to use
     const effectiveModel = llm || "claude-3-7-sonnet-20250219";
     const effectiveTemperature = temperature || 0.7;
-    const effectiveMaxTokens = maxTokens || 2048;
+    const effectiveMaxTokens = maxTokens || 8196;
 
     // Create system prompt that includes model information
     const systemPrompt = `You are running as ${effectiveModel} with temperature=${effectiveTemperature} and max_tokens=${effectiveMaxTokens}. If asked about your model or configuration, include this information in your response.`;
