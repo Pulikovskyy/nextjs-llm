@@ -1,6 +1,8 @@
 // app/api/anthropic/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+export const maxDuration = 60; 
+
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
