@@ -1,6 +1,8 @@
 // app/api/openai/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from "openai";
+export const maxDuration = 60; 
+
 
 // Initialize OpenAI client with your API key
 const openai = new OpenAI({
