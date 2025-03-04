@@ -141,7 +141,6 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit, darkMode =
     '@hf/thebloke/deepseek-coder-6.7b-base-awq': 'Cloudflare',
     '@hf/thebloke/deepseek-coder-6.7b-instruct-awq': 'Cloudflare',
     '@hf/mistral/mistral-7b-instruct-v0.2': 'Cloudflare',
-    'claude-3-7-sonnet-20250219': 'Anthropic',
     'claude-3-5-sonnet-20240620': 'Anthropic',
     'claude-3-opus-20240229': 'Anthropic',
     'gpt-4o': 'OpenAI',
