@@ -232,7 +232,6 @@ const Overlay: React.FC<OverlayProps> = ({ isOpen, onClose, onSubmit, darkMode =
             </optgroup>
             
             <optgroup label="Anthropic Models">
-              <option className={darkMode ? "bg-purple-900" : "bg-purple-200"} title="From Anthropic API" value="claude-3-7-sonnet-20250219">Claude 3.7 Sonnet</option>
               <option className={darkMode ? "bg-purple-900" : "bg-purple-200"} title="From Anthropic API" value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet</option>
               <option className={darkMode ? "bg-purple-900" : "bg-purple-200"} title="From Anthropic API" value="claude-3-opus-20240229">Claude 3 Opus</option>
             </optgroup>
